@@ -6,7 +6,7 @@ from typing import TypeVar
 
 from pydantic import BaseModel
 
-from .models import RenderJob, Storyboard
+from .models import Assignment, RenderJob, Storyboard, Submission
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
 
@@ -16,9 +16,13 @@ class Storage:
         self.root = root
         self.storyboards = root / "storyboards"
         self.jobs = root / "jobs"
+        self.assignments = root / "assignments"
+        self.submissions = root / "submissions"
         self._lock = Lock()
         self.storyboards.mkdir(parents=True, exist_ok=True)
         self.jobs.mkdir(parents=True, exist_ok=True)
+        self.assignments.mkdir(parents=True, exist_ok=True)
+        self.submissions.mkdir(parents=True, exist_ok=True)
 
     def _write(self, path: Path, value: BaseModel) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -72,4 +76,32 @@ class Storage:
             artifact = source / name
             if artifact.exists():
                 shutil.copy2(artifact, fallback_root / name)
+
+    def save_assignment(self, assignment: Assignment) -> None:
+        with self._lock:
+            self._write(self.assignments / f"{assignment.id}.json", assignment)
+
+    def load_assignment(self, assignment_id: str) -> Assignment:
+        path = self.assignments / f"{assignment_id}.json"
+        if not path.exists():
+            raise FileNotFoundError(assignment_id)
+        return Assignment.model_validate_json(path.read_text(encoding="utf-8"))
+
+    def list_assignments(self) -> list[Assignment]:
+        # Unlocked, like every other read. Sorted by filename so the order a teacher
+        # sees does not depend on the filesystem.
+        return [
+            Assignment.model_validate_json(path.read_text(encoding="utf-8"))
+            for path in sorted(self.assignments.glob("*.json"))
+        ]
+
+    def save_submission(self, submission: Submission) -> None:
+        with self._lock:
+            self._write(self.submissions / f"{submission.id}.json", submission)
+
+    def load_submission(self, submission_id: str) -> Submission:
+        path = self.submissions / f"{submission_id}.json"
+        if not path.exists():
+            raise FileNotFoundError(submission_id)
+        return Submission.model_validate_json(path.read_text(encoding="utf-8"))
 
