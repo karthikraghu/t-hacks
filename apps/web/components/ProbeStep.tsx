@@ -67,6 +67,7 @@ export function ProbeStep({ busy, exchange, index, onAnswer, submissionId }: Pro
   const lastHeardRef = useRef(0);
   const listenStartRef = useRef(0);
   const meterStopRef = useRef<(() => void) | null>(null);
+  const thinkingRef = useRef<HTMLAudioElement | null>(null);
   phaseRef.current = phase;
 
   function stopRecognition() {
@@ -170,10 +171,22 @@ export function ProbeStep({ busy, exchange, index, onAnswer, submissionId }: Pro
     setPhase("listening");
   }
 
+  // A quiet spoken "hmm" while the next question or the mark is decided, so the
+  // silence never reads as the app having stopped. Three variants, picked at
+  // random; failure to play is ignored.
+  function playThinking() {
+    const variant = Math.floor(Math.random() * 3);
+    const sound = new Audio(api.thinkingAudioUrl(variant));
+    sound.volume = 0.55;
+    thinkingRef.current = sound;
+    void sound.play().catch(() => undefined);
+  }
+
   function send(answer: string) {
     if (sentRef.current) return;
     sentRef.current = true;
     setPhase("waiting");
+    playThinking();
     // On success the parent moves to the next question or the mark, which replaces
     // this component; if the call fails the guard is released and the words appear
     // in the typed box so they can simply be sent again.
@@ -248,6 +261,7 @@ export function ProbeStep({ busy, exchange, index, onAnswer, submissionId }: Pro
       stopRecognition();
       stopMeter();
       audioRef.current?.pause();
+      thinkingRef.current?.pause();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

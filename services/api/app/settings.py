@@ -50,6 +50,10 @@ class Settings(BaseSettings):
     # prompt: the model decides whether another question is worth asking, but it can
     # never be asked to decide more than this many times.
     assignment_question_limit: int = 3
+    # Voice for the spoken conversation, separate from the lesson narration voice:
+    # a question needs an expectant, teacherly read, not a narrator's. Empty falls
+    # back to elevenlabs_voice_id.
+    probe_voice_id: str = ""
     manim_command: str = "manim"
     ffmpeg_command: str = "ffmpeg"
     # Per subprocess call, not per pipeline. A 100 second lesson renders at roughly 1.8x

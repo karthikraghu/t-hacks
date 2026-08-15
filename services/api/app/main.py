@@ -340,11 +340,34 @@ def get_probe_audio(submission_id: str, index: int) -> FileResponse:
     path = storage.probe_audio_path(submission_id, index)
     if not path.exists():
         try:
-            audio = narration.speak(submission.exchanges[index].question)
+            audio = narration.speak(
+                submission.exchanges[index].question,
+                voice_id=settings.probe_voice_id or None,
+            )
         except Exception as error:
             # NarrationFailure, network errors — the frontend falls back to the
             # written question, so this only ever costs the voice, never the flow.
             raise HTTPException(status_code=422, detail=str(error)) from error
         storage.save_probe_audio(submission_id, index, audio)
     return FileResponse(path, media_type="audio/mpeg", filename="question.mp3")
+
+
+#: Short spoken fillers played while the next question or the mark is decided.
+#: The trailing full stops keep the reads short and falling, like real muttering.
+THINKING_LINES = ["Hmm, let me think.", "Mm, right.", "Okay, let me see."]
+
+
+@app.get("/api/voice/thinking/{variant}")
+def get_thinking_audio(variant: int) -> FileResponse:
+    if variant < 0 or variant >= len(THINKING_LINES):
+        raise HTTPException(status_code=404, detail="This thinking sound does not exist.")
+    voice = settings.probe_voice_id or settings.elevenlabs_voice_id
+    path = storage.thinking_audio_path(variant, voice)
+    if not path.exists():
+        try:
+            audio = narration.speak(THINKING_LINES[variant], voice_id=voice)
+        except Exception as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        storage.save_thinking_audio(variant, voice, audio)
+    return FileResponse(path, media_type="audio/mpeg", filename="thinking.mp3")
 

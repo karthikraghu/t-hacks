@@ -78,15 +78,17 @@ class ElevenLabsNarration:
             srt=self._to_srt(aligned_text, starts, ends),
         )
 
-    def speak(self, text: str) -> bytes:
-        """Plain text-to-speech for short lines, such as the one probe question.
+    def speak(self, text: str, voice_id: str | None = None) -> bytes:
+        """Plain text-to-speech for short conversational lines, such as a probe question.
 
-        Unlike `create` this needs no timestamps, so it uses the direct endpoint
-        that returns raw MP3 bytes.
+        Unlike `create` this needs no timestamps, so it uses the direct endpoint that
+        returns raw MP3 bytes. The lower stability and raised style push the read
+        towards a live, expectant intonation — a question should sound like one.
         """
         if not self.settings.elevenlabs_is_configured:
             raise NarrationFailure("The ElevenLabs API key and voice ID must be configured.")
-        url = f"https://api.elevenlabs.io/v1/text-to-speech/{self.settings.elevenlabs_voice_id}"
+        voice = voice_id or self.settings.elevenlabs_voice_id
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice}"
         try:
             response = httpx.post(
                 url,
@@ -95,6 +97,11 @@ class ElevenLabsNarration:
                     "text": text,
                     "model_id": self.settings.elevenlabs_model_id,
                     "output_format": "mp3_44100_128",
+                    "voice_settings": {
+                        "stability": 0.4,
+                        "similarity_boost": 0.8,
+                        "style": 0.45,
+                    },
                 },
                 timeout=60,
             )

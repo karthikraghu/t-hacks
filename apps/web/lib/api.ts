@@ -54,4 +54,5 @@ export const api = {
     }),
   probeAudioUrl: (submissionId: string, index: number) =>
     `${API_URL}/api/submissions/${submissionId}/probe/audio/${index}`,
+  thinkingAudioUrl: (variant: number) => `${API_URL}/api/voice/thinking/${variant}`,
 };

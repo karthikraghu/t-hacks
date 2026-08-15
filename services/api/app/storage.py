@@ -18,11 +18,13 @@ class Storage:
         self.jobs = root / "jobs"
         self.assignments = root / "assignments"
         self.submissions = root / "submissions"
+        self.voice = root / "voice"
         self._lock = Lock()
         self.storyboards.mkdir(parents=True, exist_ok=True)
         self.jobs.mkdir(parents=True, exist_ok=True)
         self.assignments.mkdir(parents=True, exist_ok=True)
         self.submissions.mkdir(parents=True, exist_ok=True)
+        self.voice.mkdir(parents=True, exist_ok=True)
 
     def _write(self, path: Path, value: BaseModel) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -113,6 +115,17 @@ class Storage:
 
     def save_probe_audio(self, submission_id: str, index: int, audio: bytes) -> Path:
         path = self.probe_audio_path(submission_id, index)
+        with self._lock:
+            path.write_bytes(audio)
+        return path
+
+    def thinking_audio_path(self, variant: int, voice_id: str) -> Path:
+        # The voice id is part of the name, so changing the conversation voice
+        # regenerates the clips instead of serving the old voice from cache.
+        return self.voice / f"thinking_{variant}_{voice_id[:8]}.mp3"
+
+    def save_thinking_audio(self, variant: int, voice_id: str, audio: bytes) -> Path:
+        path = self.thinking_audio_path(variant, voice_id)
         with self._lock:
             path.write_bytes(audio)
         return path
