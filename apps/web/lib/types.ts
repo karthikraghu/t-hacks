@@ -91,4 +91,5 @@ export interface RenderJob {
   message: string;
   artifacts: Artifact[];
   provenance: "live" | "cached";
+  timings_seconds: Record<string, number>;
 }

@@ -90,9 +90,12 @@ class LocalRenderer:
         return result
 
     def _probe_duration(self, video: Path, job_dir: Path) -> float:
-        """Video length in seconds, or 0.0 when FFmpeg does not report it."""
+        """Video length in seconds without decoding the full video."""
         try:
-            probe = self._run([self.settings.ffmpeg_command, "-i", str(video), "-f", "null", "-"], job_dir)
+            probe = self._run(
+                [self.settings.ffmpeg_command, "-i", str(video), "-t", "0", "-f", "null", "-"],
+                job_dir,
+            )
         except RenderFailure:
             return 0.0
         match = re.search(r"Duration:\s*(\d+):(\d\d):(\d\d(?:\.\d+)?)", probe.stderr or "")
@@ -213,12 +216,13 @@ class LocalRenderer:
             return RendererResult(success=False, message="\n".join(validation.issues))
 
         media_dir = job_dir / "preview_media"
-        if media_dir.exists():
-            shutil.rmtree(media_dir)
+        # Preserve Manim's partial-movie and TeX caches across repair attempts. The
+        # generated file is overwritten in place, and Manim hashes each animation's
+        # inputs, so unaffected animations can be reused while changed ones rerender.
+        media_dir.mkdir(parents=True, exist_ok=True)
         command = [
             self.settings.manim_command,
             "-ql",
-            "--disable_caching",
             "--media_dir",
             str(media_dir),
             str(code_path),
@@ -293,22 +297,23 @@ class LocalRenderer:
             visual_copy = job_dir / "visual.mp4"
             shutil.copy2(visual, visual_copy)
 
+            class_names = [f"RecapCard{index}" for index in range(1, 4)]
+            self._run(
+                [
+                    self.settings.manim_command,
+                    "-qm",
+                    "-s",
+                    "--disable_caching",
+                    "--media_dir",
+                    str(media_dir),
+                    str(code_path),
+                    *class_names,
+                ],
+                job_dir,
+            )
+
             cards: list[str] = []
-            for index in range(1, 4):
-                class_name = f"RecapCard{index}"
-                self._run(
-                    [
-                        self.settings.manim_command,
-                        "-qm",
-                        "-s",
-                        "--disable_caching",
-                        "--media_dir",
-                        str(media_dir),
-                        str(code_path),
-                        class_name,
-                    ],
-                    job_dir,
-                )
+            for index, class_name in enumerate(class_names, start=1):
                 # Manim CE 0.19 appends its version to still-image filenames
                 # (for example RecapCard1_ManimCE_v0.19.0.png).
                 rendered = self._latest(media_dir, f"{class_name}*.png")
@@ -334,11 +339,15 @@ class LocalRenderer:
                     "subtitles=captions.srt:force_style='FontSize=18,Outline=2,Shadow=0,MarginV=10'",
                     "-c:v",
                     "libx264",
+                    "-preset",
+                    "veryfast",
                     "-pix_fmt",
                     "yuv420p",
                     "-c:a",
                     "aac",
                     "-shortest",
+                    "-movflags",
+                    "+faststart",
                     str(final_video),
                 ],
                 job_dir,

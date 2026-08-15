@@ -116,6 +116,7 @@ class RenderJob(BaseModel):
     message: str
     artifacts: list[Artifact] = Field(default_factory=list)
     provenance: Literal["live", "cached"] = "live"
+    timings_seconds: dict[str, float] = Field(default_factory=dict)
 
 
 class VisualReview(BaseModel):
@@ -140,4 +141,3 @@ class RendererResult(BaseModel):
     frames: list[str] = Field(default_factory=list)
     video: str | None = None
     cards: list[str] = Field(default_factory=list)
-

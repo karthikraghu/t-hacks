@@ -216,3 +216,19 @@ These are hard limits, and code that breaks one is rejected before it runs:
 - No umlauts and no `\text{}` inside MathTex.
 
 Audio and captions are added outside Manim. Produce the visual scenes only.
+
+# Final semantic audit
+
+Before returning the Python file, silently check every section and recap card against the supplied
+storyboard:
+
+- Represent every core item in `visual_plan`, every required formula in `latex`, and every essential
+  label in `on_screen_text`. Do not omit an approved formula or diagram element.
+- For geometry, verify each endpoint and label from the actual coordinates: a hypotenuse label belongs
+  on the diagonal opposite the right angle, an angle marker belongs at the intended vertex, and a radius
+  must end on the circumference.
+- Verify that numerical labels, colours, formulas, and drawn lengths all describe the same quantities.
+- Keep prose in `Text` and mathematics in `MathTex`; never put words inside `\\text{}` or another LaTeX
+  font command.
+- Confirm that `LessonVideo`, all section methods, and all three recap-card scenes are present before
+  emitting the file.

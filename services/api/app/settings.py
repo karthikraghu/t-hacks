@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     prompt_root: Path = REPO_ROOT / "prompts"
     fallback_root: Path = REPO_ROOT / "fallback"
     allow_hero_fallback: bool = True
+    # Fast-output defaults: deterministic validation/render failures may be repaired
+    # once, while subjective visual-review findings are recorded without forcing a
+    # full rerender. Set VISUAL_REVIEW_BLOCKING=true for stricter production output.
+    max_repair_attempts: int = 1
+    visual_review_blocking: bool = False
     # Target size for a newly generated lesson. Deliberately small: a short lesson renders in
     # a fraction of the time, so the live path can be tested quickly and each section has room
     # to breathe. Raise these to produce longer lessons.

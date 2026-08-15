@@ -191,6 +191,93 @@ class MinimalHackathonChecks(unittest.TestCase):
         completed = self.storage.load_job(job.id)
         self.assertEqual(JobStatus.READY, completed.status)
         self.assertEqual(["lesson.mp4", "recap_1.png", "recap_2.png", "recap_3.png"], [a.name for a in completed.artifacts])
+        self.assertIn("narration", completed.timings_seconds)
+        self.assertIn("code_generation", completed.timings_seconds)
+        self.assertIn("preview_attempt_1", completed.timings_seconds)
+        self.assertIn("visual_review_attempt_1", completed.timings_seconds)
+        self.assertIn("final_render", completed.timings_seconds)
+        self.assertIn("total", completed.timings_seconds)
+
+    def test_renderer_reuses_preview_cache_and_batches_recap_cards(self) -> None:
+        renderer = LocalRenderer(self.settings)
+        job_id = "renderer-optimizations"
+        job_dir = self.storage.job_dir(job_id)
+        code_path = job_dir / "lesson.py"
+        code_path.write_text((REPO_ROOT / "fallback" / "hero_lesson.py").read_text(encoding="utf-8"), encoding="utf-8")
+
+        preview_media = job_dir / "preview_media"
+        preview_media.mkdir()
+        cache_marker = preview_media / "cache-marker"
+        cache_marker.write_text("keep", encoding="utf-8")
+        preview_commands: list[list[str]] = []
+
+        def preview_run(command: list[str], _job_dir: Path):  # type: ignore[no-untyped-def]
+            preview_commands.append(command)
+            media_dir = Path(command[command.index("--media_dir") + 1])
+            media_dir.mkdir(parents=True, exist_ok=True)
+            (media_dir / "LessonVideo.mp4").write_bytes(b"preview")
+            return None
+
+        def extract_frames(
+            _video: Path,
+            directory: Path,
+            _job_dir: Path,
+            sections: int,
+            _section_durations: list[float] | None = None,
+            _duration: float = 0.0,
+        ) -> None:
+            for index in range(1, sections + 1):
+                (directory / f"frame_{index:02d}.png").write_bytes(b"frame")
+
+        with patch.object(renderer, "_run", side_effect=preview_run), patch.object(
+            renderer, "_probe_duration", return_value=31.0
+        ), patch.object(renderer, "_extract_frames", side_effect=extract_frames), patch(
+            "services.api.app.rendering.check_frame_bounds", return_value=[]
+        ):
+            preview = renderer.preview(job_id, code_path.name, 5, [6.0] * 5)
+
+        self.assertTrue(preview.success)
+        self.assertTrue(cache_marker.exists())
+        self.assertNotIn("--disable_caching", preview_commands[0])
+
+        (job_dir / "narration.mp3").write_bytes(b"audio")
+        (job_dir / "captions.srt").write_text("", encoding="utf-8")
+        final_commands: list[list[str]] = []
+
+        def final_run(command: list[str], _job_dir: Path):  # type: ignore[no-untyped-def]
+            final_commands.append(command)
+            if command[0] == self.settings.manim_command:
+                media_dir = Path(command[command.index("--media_dir") + 1])
+                media_dir.mkdir(parents=True, exist_ok=True)
+                if "LessonVideo" in command:
+                    (media_dir / "LessonVideo.mp4").write_bytes(b"visual")
+                for index in range(1, 4):
+                    if f"RecapCard{index}" in command:
+                        (media_dir / f"RecapCard{index}_ManimCE_v0.19.0.png").write_bytes(b"card")
+            else:
+                Path(command[-1]).write_bytes(b"final-video")
+            return None
+
+        with patch.object(renderer, "_run", side_effect=final_run):
+            final = renderer.final(job_id, code_path.name, 5)
+
+        self.assertTrue(final.success)
+        manim_commands = [command for command in final_commands if command[0] == self.settings.manim_command]
+        self.assertEqual(2, len(manim_commands))
+        self.assertTrue(all(name in manim_commands[1] for name in ["RecapCard1", "RecapCard2", "RecapCard3"]))
+        ffmpeg_command = final_commands[-1]
+        self.assertIn("veryfast", ffmpeg_command)
+        self.assertIn("+faststart", ffmpeg_command)
+
+    def test_duration_probe_does_not_decode_the_video(self) -> None:
+        renderer = LocalRenderer(self.settings)
+        completed = type("Completed", (), {"stderr": "Duration: 00:01:02.50"})()
+        with patch.object(renderer, "_run", return_value=completed) as run:
+            duration = renderer._probe_duration(Path("preview.mp4"), Path(self.temporary.name))
+
+        self.assertEqual(62.5, duration)
+        command = run.call_args.args[0]
+        self.assertEqual("0", command[command.index("-t") + 1])
 
     def test_unsafe_code_repair_limit_and_secret_scrubbing(self) -> None:
         unsafe = """
@@ -237,8 +324,32 @@ class RecapCard3(Scene): pass
         pipeline.run(job.id)
         failed = self.storage.load_job(job.id)
         self.assertEqual(JobStatus.FAILED, failed.status)
-        self.assertEqual(2, ai.repair_calls)
+        self.assertEqual(1, ai.repair_calls)
         self.assertNotIn(secret, failed.message)
+
+    def test_visual_review_is_advisory_in_fast_output_mode(self) -> None:
+        self.settings.allow_hero_fallback = False
+        self.settings.visual_review_blocking = False
+        self.storyboard.state = StoryboardState.APPROVED
+        self.storage.save_storyboard(self.storyboard)
+        job = self._job()
+        ai = FakeAI(preview_approved=False)
+        pipeline = GenerationPipeline(
+            self.settings,
+            self.storage,
+            self.catalog,
+            ai,
+            SuccessfulNarration(),
+            SuccessfulRenderer(self.storage),
+        )
+
+        pipeline.run(job.id)
+
+        completed = self.storage.load_job(job.id)
+        self.assertEqual(JobStatus.READY, completed.status)
+        self.assertEqual(0, ai.repair_calls)
+        warnings = self.storage.job_dir(job.id) / "review_warnings.log"
+        self.assertIn("Vorschau fehlerhaft", warnings.read_text(encoding="utf-8"))
 
     def test_frame_bounds_gate_flags_cut_off_content(self) -> None:
         from PIL import Image, ImageDraw
