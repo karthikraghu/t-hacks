@@ -31,14 +31,23 @@
       "duration_seconds": 22
     },
     {
-      "title": "Your turn",
-      "purpose": "Recall and summary",
-      "narration": "Remember: in a distance-time graph, steepness is speed. Now here is something to think about. One line in a graph runs perfectly flat for a while. What is the cyclist doing during that time? Explain your answer in one sentence.",
-      "visual_plan": "The key statement and a small graph with a flat segment appear. The thinking question then stays large and calm on screen.",
-      "on_screen_text": ["What does flat mean?"],
+      "title": "A pause in the journey",
+      "purpose": "One more reading: the flat line",
+      "narration": "Sometimes the line neither rises nor falls, and for a while it runs perfectly flat. Time still passes, but the distance does not change. A flat line means the cyclist has stopped for a rest at the roadside.",
+      "visual_plan": "The line rises, then a clearly marked horizontal segment follows before it rises again. The flat segment is highlighted while the rest of the line stays muted.",
+      "on_screen_text": ["flat = resting"],
+      "latex": [],
+      "duration_seconds": 16
+    },
+    {
+      "title": "Reading the whole story",
+      "purpose": "Closure: takeaway, recall question, and a deliberate ending",
+      "narration": "Back to our cyclist: her whole journey became one line, and you can read it now. Steeper means faster, and flat means resting. One question to keep: when one line ends higher but another is steeper, which cyclist is faster? Say it in one sentence. Then you can read any distance-time graph.",
+      "visual_plan": "The key statement and a small graph with both lines appear. The thinking question then stays large and calm on screen, and the closing line fades in beneath it.",
+      "on_screen_text": ["Which is faster?"],
       "latex": ["v = \\frac{s}{t}"],
-      "duration_seconds": 18,
-      "check_prompt": "Explain in one sentence what a flat segment in a distance-time graph says about the motion."
+      "duration_seconds": 22,
+      "check_prompt": "Explain in one sentence why the steeper line belongs to the faster cyclist even when the other line ends higher."
     }
   ],
   "recap_cards": [

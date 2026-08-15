@@ -32,17 +32,18 @@ class Settings(BaseSettings):
     # full rerender. Set VISUAL_REVIEW_BLOCKING=true for stricter production output.
     max_repair_attempts: int = 1
     visual_review_blocking: bool = False
-    # Target size for a newly generated lesson. Deliberately small: a short lesson renders in
-    # a fraction of the time, so the live path can be tested quickly and each section has room
-    # to breathe. Raise these to produce longer lessons.
-    lesson_target_sections: int = 2
-    lesson_target_seconds: int = 30
-    # Accepted range when validating any storyboard. Wider than the target so the bundled
-    # five-section hero example still validates.
+    # Target size for a newly generated lesson: a full 90-120 second micro-lesson, planned
+    # at 105 seconds so normal drift in either direction stays inside that window. Five
+    # sections gives the arc room: hook, build, formalise, worked example, closure.
+    lesson_target_sections: int = 5
+    lesson_target_seconds: int = 105
+    # Accepted range when validating any storyboard. Wider than the target on both sides:
+    # the floor keeps the bundled hero examples valid, and the ceiling leaves tolerance
+    # above 120 so a slightly long draft is not rejected after a paid model call.
     lesson_min_sections: int = 2
     lesson_max_sections: int = 6
     lesson_min_seconds: int = 25
-    lesson_max_seconds: int = 120
+    lesson_max_seconds: int = 130
     # How much of the mark comes from the spoken answers rather than the written work.
     # 0.4 is high on purpose: the conversation is the only part of a submission that
     # cannot be delegated, so it has to be worth enough to matter.
