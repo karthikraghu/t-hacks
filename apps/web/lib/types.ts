@@ -93,3 +93,44 @@ export interface RenderJob {
   provenance: "live" | "cached";
   timings_seconds: Record<string, number>;
 }
+
+export type TaskMode = "ai_assistable" | "core";
+export type SubmissionState = "submitted" | "probed" | "answered" | "evaluated";
+
+export interface AssignmentTask {
+  description: string;
+  mode: TaskMode;
+  rationale: string;
+}
+
+export interface Assignment {
+  id: string;
+  title: string;
+  brief: string;
+  tasks: AssignmentTask[];
+}
+
+export interface SubmissionProbe {
+  question: string;
+  quoted_span: string;
+}
+
+export interface SubmissionEvaluation {
+  core_score: number;
+  probe_score: number;
+  weighted_score: number;
+  probe_weight: number;
+  strengths: string[];
+  gaps: string[];
+  comment: string;
+}
+
+export interface Submission {
+  id: string;
+  assignment_id: string;
+  state: SubmissionState;
+  core_response: string;
+  probe?: SubmissionProbe | null;
+  probe_answer?: string | null;
+  evaluation?: SubmissionEvaluation | null;
+}

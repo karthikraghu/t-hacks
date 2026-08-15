@@ -1,4 +1,4 @@
-import type { JobStatus, Level, Method } from "./types";
+import type { JobStatus, Level, Method, TaskMode } from "./types";
 
 export const methodLabels: Record<Method, string> = {
   auto: "Choose for me",
@@ -25,3 +25,11 @@ export const renderStages: { status: JobStatus; label: string; note: string }[] 
 ];
 
 export const activeStatuses: JobStatus[] = ["narrating", "coding", "rendering", "checking"];
+
+export const taskModeLabels: Record<TaskMode, string> = {
+  ai_assistable: "AI may help",
+  core: "Your own thinking",
+};
+
+/** Core first: the point of the page is what the student has to do themselves. */
+export const taskModes: TaskMode[] = ["core", "ai_assistable"];
