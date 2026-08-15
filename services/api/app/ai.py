@@ -49,6 +49,7 @@ class AIService:
             model=self.settings.model_name,
             model_provider=self.settings.model_provider,
             api_key=api_key,
+            base_url=self.settings.openai_base_url or None,
         )
 
     def prompt(self, name: str) -> str:

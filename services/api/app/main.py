@@ -238,7 +238,10 @@ def probe_submission(submission_id: str) -> Submission:
 
     try:
         generated = ai.probe_question(assignment, submission)
-    except (ModelNotConfigured, RuntimeError) as error:
+    except Exception as error:
+        # ModelNotConfigured, provider auth failures, network errors — every way the
+        # model call can fail reads as one 422 sentence, never a bare 500. Verified
+        # against a real 401: openai.AuthenticationError is not a RuntimeError.
         raise HTTPException(status_code=422, detail=str(error)) from error
 
     # The free deterministic gate, run before anything is persisted: a question the
@@ -283,7 +286,9 @@ def answer_probe(submission_id: str, request: ProbeAnswerRequest) -> Submission:
 
     try:
         generated = ai.evaluate_submission(assignment, submission)
-    except (ModelNotConfigured, RuntimeError) as error:
+    except Exception as error:
+        # Same mapping as the probe route: any model-call failure is a 422 sentence.
+        # The answer was already saved above, so the student can simply retry.
         raise HTTPException(status_code=422, detail=str(error)) from error
 
     # The weighting is arithmetic here, not a number the model chose: how much the

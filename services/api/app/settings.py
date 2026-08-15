@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     model_provider: str = "openai"
     model_name: str = ""
     openai_api_key: str = ""
+    # Optional OpenAI-compatible endpoint (e.g. DeutschlandGPT). Empty means the
+    # provider's own default; the client only receives it when set.
+    openai_base_url: str = ""
     anthropic_api_key: str = ""
     elevenlabs_api_key: str = ""
     elevenlabs_voice_id: str = ""
