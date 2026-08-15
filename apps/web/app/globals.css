@@ -1229,3 +1229,46 @@ button.ruler-seg:hover {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ------------------------------------------------------------------ *
+ * Assignment: the split between delegable work and the student's own thinking.
+ * ------------------------------------------------------------------ */
+
+.task-split {
+  display: grid;
+  gap: 10px;
+}
+
+.task-row {
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--radius-s);
+  padding: 10px 12px;
+}
+
+.task-row.is-core {
+  background: var(--pen-wash);
+  border-color: var(--rule);
+}
+
+/* The one question. Marker yellow says "you are here" and nothing else does. */
+.probe-card {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--marker);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+}
+
+.probe-quote {
+  border-left: 2px solid var(--rule);
+  color: var(--ink-2);
+  font-style: italic;
+  margin: 10px 0 0;
+  padding-left: 12px;
+}
+
+.score-row {
+  display: flex;
+  gap: 28px;
+  margin: 4px 0 12px;
+}
