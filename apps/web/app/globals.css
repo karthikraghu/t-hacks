@@ -186,14 +186,80 @@ textarea {
   font-size: 16px;
 }
 
-.brand-sub {
-  display: block;
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  margin-top: -2px;
+/* ------------------------------------------------------------------ *
+ * Front page — two doors, one per user. No shell width: the split runs
+ * the full window so the choice is the whole screen and nothing else is.
+ * ------------------------------------------------------------------ */
+.doors {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.door {
+  display: grid;
+  align-content: center;
+  gap: 12px;
+  padding: 56px clamp(24px, 5vw, 76px);
+  color: var(--ink);
+  text-decoration: none;
+  border-right: 1px solid var(--rule);
+  transition: background-color 0.16s ease;
+}
+
+.door:last-child {
+  border-right: 0;
+}
+
+/* Ruled paper for the teacher, plain card for the student — the same distinction
+   the rest of the app draws between planning a lesson and doing the work. */
+.door-teacher {
+  background-color: var(--card);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+.door-student {
+  background-color: var(--card);
+}
+
+.door:hover {
+  background-color: var(--pen-wash);
+}
+
+.door-title {
+  font-weight: 640;
+  font-variation-settings: "wdth" 112;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+  font-size: clamp(34px, 5vw, 56px);
+}
+
+/* Reserved whether or not the counts have arrived, so the doors never jump. */
+.door-facts {
+  display: grid;
+  gap: 2px;
+  min-height: 42px;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.door-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  color: var(--pen);
+  font-weight: 560;
+}
+
+.door-go span {
+  transition: transform 0.16s ease;
+}
+
+.door:hover .door-go span {
+  transform: translateX(3px);
 }
 
 /* Step rail — progress, not navigation: the API cannot reopen an approved script. */
@@ -627,6 +693,13 @@ textarea {
   background: linear-gradient(90deg, var(--rule-soft), var(--paper), var(--rule-soft));
   background-size: 220% 100%;
   animation: shimmer 1.3s linear infinite;
+}
+
+.skeleton-wide {
+  flex: 1;
+  width: auto;
+  height: 44px;
+  border-radius: var(--radius-s);
 }
 
 @keyframes shimmer {
@@ -1153,6 +1226,20 @@ button.ruler-seg:hover {
 
   .rail::-webkit-scrollbar {
     display: none;
+  }
+
+  .doors {
+    grid-template-columns: 1fr;
+  }
+
+  .door {
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+    padding-block: 40px;
+  }
+
+  .door-facts {
+    min-height: 0;
   }
 }
 

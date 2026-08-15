@@ -1,4 +1,11 @@
-import type { Assignment, Catalog, LessonRequest, RenderJob, Storyboard, Submission } from "./types";
+import type {
+  AssignmentsResponse,
+  Catalog,
+  LessonRequest,
+  RenderJob,
+  Storyboard,
+  Submission,
+} from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -39,7 +46,7 @@ export const api = {
     request<RenderJob>(`/api/storyboards/${storyboardId}/approve`, { method: "POST" }),
   job: (jobId: string) => request<RenderJob>(`/api/jobs/${jobId}`),
   artifactUrl: (path: string) => `${API_URL}${path}`,
-  assignments: () => request<{ assignments: Assignment[] }>("/api/assignments"),
+  assignments: () => request<AssignmentsResponse>("/api/assignments"),
   submit: (assignmentId: string, coreResponse: string) =>
     request<Submission>(`/api/assignments/${assignmentId}/submissions`, {
       method: "POST",

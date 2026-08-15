@@ -6,7 +6,7 @@ import type { Catalog, LessonRequest, Level, Method } from "@/lib/types";
 
 interface Props {
   busy: boolean;
-  catalog: Catalog | null;
+  catalog: Catalog;
   headingRef: RefObject<HTMLHeadingElement | null>;
   lesson: LessonRequest;
   onGrade: (grade: number) => void;
@@ -31,7 +31,7 @@ export function SetupStep({
   onSubtopic,
   onTopic,
 }: Props) {
-  const grade = catalog?.grades.find((entry) => entry.grade === lesson.grade);
+  const grade = catalog.grades.find((entry) => entry.grade === lesson.grade);
   const topic = grade?.topics.find((entry) => entry.id === lesson.topic_id);
   const subtopic = topic?.subtopics.find((entry) => entry.id === lesson.subtopic_id);
 
@@ -43,12 +43,9 @@ export function SetupStep({
   return (
     <form onSubmit={submit}>
       <div className="page-head">
-        <div>
-          <p className="u-label">Step 1</p>
-          <h1 className="u-display" ref={headingRef} tabIndex={-1}>
-            Set up the lesson
-          </h1>
-        </div>
+        <h1 className="u-display" ref={headingRef} tabIndex={-1}>
+          Set up the lesson
+        </h1>
         {subtopic?.hero && (
           <span
             className="tag tag-marker"
@@ -62,27 +59,19 @@ export function SetupStep({
       <div className="card">
         <fieldset className="section section-set">
           <legend className="u-label">Grade</legend>
-          {catalog ? (
-            <div className="choice-row">
-              {catalog.grades.map((entry) => (
-                <label className="choice" key={entry.grade}>
-                  <input
-                    checked={entry.grade === lesson.grade}
-                    name="grade"
-                    onChange={() => onGrade(entry.grade)}
-                    type="radio"
-                  />
-                  <span className="choice-pill u-mono">{entry.grade}</span>
-                </label>
-              ))}
-            </div>
-          ) : (
-            <div className="skeleton-row">
-              {[0, 1, 2, 3, 4, 5].map((key) => (
-                <span className="skeleton" key={key} />
-              ))}
-            </div>
-          )}
+          <div className="choice-row">
+            {catalog.grades.map((entry) => (
+              <label className="choice" key={entry.grade}>
+                <input
+                  checked={entry.grade === lesson.grade}
+                  name="grade"
+                  onChange={() => onGrade(entry.grade)}
+                  type="radio"
+                />
+                <span className="choice-pill u-mono">{entry.grade}</span>
+              </label>
+            ))}
+          </div>
         </fieldset>
 
         <fieldset className="section section-set">
@@ -164,7 +153,6 @@ export function SetupStep({
               </label>
             ))}
           </div>
-          <p className="u-note u-spaced">Choose for me picks the methods that fit this focus and pace.</p>
         </fieldset>
 
         <div className="section">
@@ -177,16 +165,39 @@ export function SetupStep({
               value={lesson.objective ?? ""}
             />
           </label>
-          <p className="u-note u-spaced">Filled in from the catalogue. Edit it to change the emphasis.</p>
         </div>
 
         <div className="setup-foot">
-          <p className="u-note u-narrow">{catalog?.notice}</p>
-          <button className="btn btn-primary" disabled={busy || !catalog} type="submit">
+          <p className="u-note u-narrow">{catalog.notice}</p>
+          <button className="btn btn-primary" disabled={busy} type="submit">
             {busy ? "Writing the script…" : "Write the script"}
           </button>
         </div>
       </div>
     </form>
+  );
+}
+
+/** Stands in until the catalogue arrives — the form has nothing to choose from before it. */
+export function SetupSkeleton() {
+  return (
+    <div className="card">
+      <div className="section">
+        <p className="u-label u-spaced-b">Grade</p>
+        <div className="skeleton-row">
+          {[0, 1, 2, 3, 4, 5].map((key) => (
+            <span className="skeleton" key={key} />
+          ))}
+        </div>
+      </div>
+      <div className="section">
+        <p className="u-label u-spaced-b">Topic</p>
+        <div className="skeleton-row">
+          {[0, 1].map((key) => (
+            <span className="skeleton skeleton-wide" key={key} />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

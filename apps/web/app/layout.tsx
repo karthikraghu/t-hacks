@@ -19,8 +19,8 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Klarblick · Micro-lessons for maths",
-  description: "Plan a maths micro-lesson, approve the script, and render a narrated video.",
+  title: "Klarblick",
+  description: "Render a narrated maths micro-lesson, or hand in an assignment and be marked on it.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -54,4 +54,10 @@ def seed_assignment() -> Assignment:
                 rationale="Reading an outlier is interpretation, not calculation.",
             ),
         ],
+        example_response=(
+            "Rainfall for the year is in the table. The mean is 74 mm and the median is "
+            "58 mm. I used the median as the summary figure for the year. July had 268 mm, "
+            "which is much higher than every other month. Overall the year was fairly dry "
+            "apart from one wet month."
+        ),
     )

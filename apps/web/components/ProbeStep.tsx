@@ -44,13 +44,14 @@ interface Props {
   exchange: SubmissionExchange;
   index: number;
   onAnswer: (answer: string) => Promise<void>;
+  questionLimit: number;
   submissionId: string;
 }
 
 /* Mounted once per question — the parent keys this component by the exchange index,
    so every new question starts the ask-then-listen cycle afresh. There are no
    buttons mid-conversation: a short pause is what ends an answer. */
-export function ProbeStep({ busy, exchange, index, onAnswer, submissionId }: Props) {
+export function ProbeStep({ busy, exchange, index, onAnswer, questionLimit, submissionId }: Props) {
   const [phase, setPhase] = useState<Phase>("ready");
   const [note, setNote] = useState<string | null>(null);
   // Only the typed fallback renders this; while speaking, nothing is shown.
@@ -278,8 +279,8 @@ export function ProbeStep({ busy, exchange, index, onAnswer, submissionId }: Pro
   return (
     <>
       <div className="page-head">
-        <p className="u-label">Question {index + 1} of up to 3</p>
-        <h1 className="u-display">About your own reasoning</h1>
+        <h1 className="u-display">Question {index + 1}</h1>
+        <span className="tag u-mono">of {questionLimit}</span>
       </div>
 
       {/* preload="auto" so the narration is generated while the student reads the intro */}
@@ -295,16 +296,12 @@ export function ProbeStep({ busy, exchange, index, onAnswer, submissionId }: Pro
         <>
           {index === 0 && (
             <div className="alert alert-info" role="note">
-              <p>
-                You will have a short spoken conversation about your own work — up to three
-                questions. Each question is read aloud; answer it out loud, and pause for a
-                moment when you have finished. There is nothing to press.
-              </p>
+              <p>Answer out loud. A pause ends your answer — there is nothing to press.</p>
             </div>
           )}
           <div className="mark-actions">
             <button className="btn btn-primary" onClick={askTheQuestion} type="button">
-              {index === 0 ? "I am ready — start the conversation" : "Hear the next question"}
+              {index === 0 ? "Hear the first question" : "Hear the next question"}
             </button>
           </div>
         </>

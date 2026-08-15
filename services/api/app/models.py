@@ -166,6 +166,10 @@ class Assignment(BaseModel):
     title: str
     brief: str
     tasks: list[AssignmentTask]
+    #: Demo scaffolding: a response the page can drop into the box so the flow can be
+    #: shown without typing one. It belongs beside the seeded assignment, not in the
+    #: client, because a real assignment simply leaves it unset.
+    example_response: str | None = None
 
 
 class SubmissionRequest(BaseModel):

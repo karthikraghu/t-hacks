@@ -1,16 +1,19 @@
 "use client";
 
 import { FormEvent } from "react";
+import type { Marking } from "@/lib/types";
 
 interface Props {
   busy: boolean;
   draft: string;
+  /** Present only on the seeded worked example; it fills the box for a demo. */
+  example: string | null;
+  marking: Marking | null;
   onDraft: (value: string) => void;
-  onExample: () => void;
   onSubmit: () => void;
 }
 
-export function SubmitStep({ busy, draft, onDraft, onExample, onSubmit }: Props) {
+export function SubmitStep({ busy, draft, example, marking, onDraft, onSubmit }: Props) {
   function send(event: FormEvent) {
     event.preventDefault();
     onSubmit();
@@ -19,7 +22,6 @@ export function SubmitStep({ busy, draft, onDraft, onExample, onSubmit }: Props)
   return (
     <form onSubmit={send}>
       <div className="page-head">
-        <p className="u-label">Your work</p>
         <h1 className="u-display">Hand in the part that is yours</h1>
       </div>
 
@@ -35,17 +37,25 @@ export function SubmitStep({ busy, draft, onDraft, onExample, onSubmit }: Props)
               value={draft}
             />
           </div>
-          <button className="btn btn-quiet btn-small" onClick={onExample} type="button">
-            Use the worked example
-          </button>
+          {example && (
+            <button
+              className="btn btn-quiet btn-small u-spaced"
+              onClick={() => onDraft(example)}
+              type="button"
+            >
+              Fill in the worked example
+            </button>
+          )}
         </div>
       </div>
 
       <div className="approve-bar">
-        <p className="u-muted">
-          After you hand in, you will have a short spoken conversation about your own reasoning —
-          up to three questions. It counts towards the mark.
-        </p>
+        {marking && (
+          <p className="u-note">
+            <span className="u-mono">{marking.question_limit}</span> spoken questions follow, worth{" "}
+            <span className="u-mono">{Math.round(marking.probe_weight * 100)}%</span> of the mark.
+          </p>
+        )}
         <div className="approve-actions">
           <button className="btn btn-primary" disabled={busy} type="submit">
             {busy ? "Reading your work…" : "Hand in"}

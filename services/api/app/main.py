@@ -27,7 +27,7 @@ from .narration import ElevenLabsNarration
 from .pipeline import GenerationPipeline
 from .probe import check_grounding
 from .rendering import LocalRenderer
-from .seed_assignment import SEED_ASSIGNMENT_ID, seed_assignment
+from .seed_assignment import seed_assignment
 from .settings import get_settings
 from .storage import Storage
 
@@ -39,14 +39,15 @@ narration = ElevenLabsNarration(settings)
 renderer = LocalRenderer(settings)
 pipeline = GenerationPipeline(settings, storage, catalog, ai, narration, renderer)
 
-# The worked example is written once at import, so the assignment list is never empty
-# on a fresh machine and the feature demonstrates with no API key configured. Import
-# already touches the filesystem here (Catalog parses its JSON, Storage mkdirs), so a
-# write is consistent — but it must never raise, or the app becomes unimportable.
+# The worked example is rewritten at import, so the assignment list is never empty on a
+# fresh machine and an older stored copy picks up edits to the seed. It holds no user
+# state — submissions are separate files. Import already touches the filesystem here
+# (Catalog parses its JSON, Storage mkdirs), so a write is consistent — but it must never
+# raise, or the app becomes unimportable.
 try:
-    storage.load_assignment(SEED_ASSIGNMENT_ID)
-except FileNotFoundError:
     storage.save_assignment(seed_assignment())
+except OSError:
+    pass
 
 app = FastAPI(title="Klarblick API", version="0.1.0")
 app.add_middleware(
@@ -191,7 +192,16 @@ def get_artifact(job_id: str, artifact_name: str) -> FileResponse:
 
 @app.get("/api/assignments")
 def list_assignments() -> dict[str, object]:
-    return {"assignments": [assignment.model_dump() for assignment in storage.list_assignments()]}
+    return {
+        "assignments": [assignment.model_dump() for assignment in storage.list_assignments()],
+        # The marking rule is configuration, not a property of any one assignment, so it
+        # rides alongside the list. The page states it from here rather than repeating
+        # the numbers in its own copy.
+        "marking": {
+            "probe_weight": settings.assignment_probe_weight,
+            "question_limit": settings.assignment_question_limit,
+        },
+    }
 
 
 @app.post("/api/assignments/{assignment_id}/submissions", response_model=Submission)

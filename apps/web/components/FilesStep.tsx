@@ -19,12 +19,9 @@ export function FilesStep({ headingRef, job, onStartOver, storyboard }: Props) {
   return (
     <div className="stack">
       <div className="page-head">
-        <div>
-          <p className="u-label">Step 4</p>
-          <h1 className="u-display" ref={headingRef} tabIndex={-1}>
-            {storyboard?.title ?? "Your lesson"}
-          </h1>
-        </div>
+        <h1 className="u-display" ref={headingRef} tabIndex={-1}>
+          {storyboard?.title ?? "Your lesson"}
+        </h1>
         <div className="page-head-meta">
           {storyboard && <span className="tag u-mono">{timecode(totalDuration(storyboard.sections))}</span>}
           <button className="btn btn-quiet" onClick={onStartOver} type="button">
@@ -74,8 +71,6 @@ export function FilesStep({ headingRef, job, onStartOver, storyboard }: Props) {
           </div>
         </section>
       )}
-
-      <p className="u-note">Written by AI from the script you approved — watch it once before the lesson.</p>
     </div>
   );
 }

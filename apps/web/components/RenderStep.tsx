@@ -21,12 +21,9 @@ export function RenderStep({ elapsedSeconds, headingRef, job, onStartOver, story
   return (
     <div className="stack">
       <div className="page-head">
-        <div>
-          <p className="u-label">Step 3</p>
-          <h1 className="u-display" ref={headingRef} tabIndex={-1}>
-            {failed ? "The render stopped" : "Rendering"}
-          </h1>
-        </div>
+        <h1 className="u-display" ref={headingRef} tabIndex={-1}>
+          {failed ? "The render stopped" : "Rendering"}
+        </h1>
         {!failed && <span className="tag u-mono">{timecode(elapsedSeconds)} elapsed</span>}
       </div>
 
@@ -34,11 +31,7 @@ export function RenderStep({ elapsedSeconds, headingRef, job, onStartOver, story
         <div className="render-top">
           <div>
             <h2 className="u-h2">{storyboard?.title}</h2>
-            <p className="u-note u-spaced">
-              {failed
-                ? "Nothing was saved. The script cannot be reopened, so start a new lesson."
-                : "This takes a few minutes. You can leave the tab open — it updates itself."}
-            </p>
+            {failed && <p className="u-note u-spaced">Nothing was saved, and the script cannot be reopened.</p>}
           </div>
         </div>
 

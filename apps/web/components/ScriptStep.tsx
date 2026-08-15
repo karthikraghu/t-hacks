@@ -63,12 +63,9 @@ export function ScriptStep({
   return (
     <div className="stack">
       <div className="page-head">
-        <div>
-          <p className="u-label">Step 2</p>
-          <h1 className="u-display" ref={headingRef} tabIndex={-1}>
-            Read the script
-          </h1>
-        </div>
+        <h1 className="u-display" ref={headingRef} tabIndex={-1}>
+          Read the script
+        </h1>
         <div className="page-head-meta">
           <span className="tag u-mono">{storyboard.sections.length} scenes</span>
           <span className="tag tag-pen u-mono">{timecode(total)}</span>
@@ -168,7 +165,7 @@ export function ScriptStep({
                           autoFocus
                           onChange={(event) => setDraft(event.target.value)}
                           onKeyDown={(event) => markKeys(event, section)}
-                          placeholder="Use a ramp instead of a staircase, and slow the last line down."
+                          placeholder="What should change in this scene?"
                           rows={2}
                           value={draft}
                         />
@@ -213,7 +210,7 @@ export function ScriptStep({
       <RecapPreview storyboard={storyboard} />
 
       <div className="approve-bar">
-        <p className="u-note">Approving starts the narration and the render. The script is fixed from then on.</p>
+        <p className="u-note">The script is fixed once approved.</p>
         <div className="approve-actions">
           <button className="btn btn-quiet" disabled={busy} onClick={onBack} type="button">
             Change the setup
@@ -231,7 +228,7 @@ function RecapPreview({ storyboard }: { storyboard: Storyboard }) {
   if (storyboard.recap_cards.length === 0) return null;
   return (
     <section>
-      <p className="u-label u-spaced-b">Recap cards planned from this script</p>
+      <p className="u-label u-spaced-b">Recap cards</p>
       <div className="cards-grid">
         {storyboard.recap_cards.map((card) => (
           <div className="recap-plan" key={card.title}>

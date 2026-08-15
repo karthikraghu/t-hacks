@@ -1,22 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AppHeader } from "@/components/AppHeader";
 import { AssignmentBrief } from "@/components/AssignmentBrief";
 import { EvaluationStep } from "@/components/EvaluationStep";
 import { ProbeStep } from "@/components/ProbeStep";
+import { StepRail } from "@/components/StepRail";
 import { SubmitStep } from "@/components/SubmitStep";
 import { api } from "@/lib/api";
-import type { Assignment, Submission } from "@/lib/types";
+import { assignmentSteps } from "@/lib/labels";
+import type { Assignment, Marking, Submission } from "@/lib/types";
 
 type Step = "write" | "answer" | "marked";
 
-const EXAMPLE =
-  "Rainfall for the year is in the table. The mean is 74 mm and the median is 58 mm. " +
-  "I used the median as the summary figure for the year. July had 268 mm, which is much " +
-  "higher than every other month. Overall the year was fairly dry apart from one wet month.";
+const stepOrder: Step[] = ["write", "answer", "marked"];
 
 export default function AssignmentsPage() {
   const [assignment, setAssignment] = useState<Assignment | null>(null);
+  const [marking, setMarking] = useState<Marking | null>(null);
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [draft, setDraft] = useState("");
   const [step, setStep] = useState<Step>("write");
@@ -31,7 +32,10 @@ export default function AssignmentsPage() {
   useEffect(() => {
     api
       .assignments()
-      .then((body) => setAssignment(body.assignments[0] ?? null))
+      .then((body) => {
+        setAssignment(body.assignments[0] ?? null);
+        setMarking(body.marking);
+      })
       .catch((reason) =>
         setError(reason instanceof Error ? reason.message : "The assignments could not be loaded."),
       );
@@ -76,45 +80,53 @@ export default function AssignmentsPage() {
   }
 
   return (
-    <main className="main">
-      <div className="shell stack">
-        {error && (
-          <div className="alert alert-error" role="alert">
-            <p>{error}</p>
-            <button className="btn btn-plain btn-small" onClick={() => setError(null)} type="button">
-              Dismiss
-            </button>
-          </div>
-        )}
+    <div className="shell">
+      <AppHeader>
+        <StepRail current={stepOrder.indexOf(step)} steps={assignmentSteps} />
+      </AppHeader>
 
-        {assignment && <AssignmentBrief assignment={assignment} />}
+      <main className="main">
+        <div className="stack">
+          {error && (
+            <div className="alert alert-error" role="alert">
+              <p>{error}</p>
+              <button className="btn btn-plain btn-small" onClick={() => setError(null)} type="button">
+                Dismiss
+              </button>
+            </div>
+          )}
 
-        {step === "write" && (
-          <SubmitStep
-            busy={busy}
-            draft={draft}
-            onDraft={setDraft}
-            onExample={() => setDraft(EXAMPLE)}
-            onSubmit={handIn}
-          />
-        )}
+          {assignment && <AssignmentBrief assignment={assignment} />}
 
-        {step === "answer" && submission && submission.exchanges.length > 0 && (
-          <ProbeStep
-            busy={busy}
-            exchange={submission.exchanges[submission.exchanges.length - 1]}
-            index={submission.exchanges.length - 1}
-            // Keyed by question so every follow-up remounts the listen-answer cycle.
-            key={submission.exchanges.length - 1}
-            onAnswer={answer}
-            submissionId={submission.id}
-          />
-        )}
+          {step === "write" && (
+            <SubmitStep
+              busy={busy}
+              draft={draft}
+              example={assignment?.example_response ?? null}
+              marking={marking}
+              onDraft={setDraft}
+              onSubmit={handIn}
+            />
+          )}
 
-        {step === "marked" && submission?.evaluation && (
-          <EvaluationStep evaluation={submission.evaluation} />
-        )}
-      </div>
-    </main>
+          {step === "answer" && submission && submission.exchanges.length > 0 && (
+            <ProbeStep
+              busy={busy}
+              exchange={submission.exchanges[submission.exchanges.length - 1]}
+              index={submission.exchanges.length - 1}
+              // Keyed by question so every follow-up remounts the listen-answer cycle.
+              key={submission.exchanges.length - 1}
+              onAnswer={answer}
+              questionLimit={marking?.question_limit ?? submission.exchanges.length}
+              submissionId={submission.id}
+            />
+          )}
+
+          {step === "marked" && submission?.evaluation && (
+            <EvaluationStep evaluation={submission.evaluation} />
+          )}
+        </div>
+      </main>
+    </div>
   );
 }

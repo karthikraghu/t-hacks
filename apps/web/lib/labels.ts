@@ -26,6 +26,10 @@ export const renderStages: { status: JobStatus; label: string; note: string }[] 
 
 export const activeStatuses: JobStatus[] = ["narrating", "coding", "rendering", "checking"];
 
+/** Progress, not navigation: neither flow can reopen a step it has left. */
+export const lessonSteps = ["Set up", "Script", "Render", "Files"] as const;
+export const assignmentSteps = ["Work", "Questions", "Mark"] as const;
+
 export const taskModeLabels: Record<TaskMode, string> = {
   ai_assistable: "AI may help",
   core: "Your own thinking",

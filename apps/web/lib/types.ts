@@ -108,6 +108,19 @@ export interface Assignment {
   title: string;
   brief: string;
   tasks: AssignmentTask[];
+  /** Only the seeded worked example carries one; a real assignment leaves it unset. */
+  example_response?: string | null;
+}
+
+/** How every assignment is marked. Configuration, so it arrives beside the list. */
+export interface Marking {
+  probe_weight: number;
+  question_limit: number;
+}
+
+export interface AssignmentsResponse {
+  assignments: Assignment[];
+  marking: Marking;
 }
 
 export interface SubmissionExchange {

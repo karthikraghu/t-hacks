@@ -2,16 +2,15 @@
 
 import { Fragment } from "react";
 
-export const STEPS = ["Set up", "Script", "Render", "Files"] as const;
-
 interface Props {
   current: number;
+  steps: readonly string[];
 }
 
-export function StepRail({ current }: Props) {
+export function StepRail({ current, steps }: Props) {
   return (
     <nav aria-label="Progress" className="rail">
-      {STEPS.map((label, index) => {
+      {steps.map((label, index) => {
         const state = index < current ? "is-done" : index === current ? "is-current" : "";
         return (
           <Fragment key={label}>
