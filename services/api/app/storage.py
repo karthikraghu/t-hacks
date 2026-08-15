@@ -105,3 +105,14 @@ class Storage:
             raise FileNotFoundError(submission_id)
         return Submission.model_validate_json(path.read_text(encoding="utf-8"))
 
+    def probe_audio_path(self, submission_id: str) -> Path:
+        # Beside the submission JSON, so the spoken question is generated once and
+        # then served from disk instead of costing a narration call per replay.
+        return self.submissions / f"{submission_id}_probe.mp3"
+
+    def save_probe_audio(self, submission_id: str, audio: bytes) -> Path:
+        path = self.probe_audio_path(submission_id)
+        with self._lock:
+            path.write_bytes(audio)
+        return path
+

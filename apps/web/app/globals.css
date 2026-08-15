@@ -1272,3 +1272,24 @@ button.ruler-seg:hover {
   gap: 28px;
   margin: 4px 0 12px;
 }
+
+/* The two timed windows of the spoken answer. */
+.probe-timer-block {
+  text-align: center;
+}
+
+.probe-timer {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 56px;
+  font-weight: 600;
+  line-height: 1.1;
+  margin: 4px 0 0;
+}
+
+.probe-transcript {
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius-s);
+  color: var(--ink-2);
+  min-height: 64px;
+  padding: 12px 14px;
+}

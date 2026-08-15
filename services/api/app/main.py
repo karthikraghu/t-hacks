@@ -309,3 +309,24 @@ def answer_probe(submission_id: str, request: ProbeAnswerRequest) -> Submission:
     storage.save_submission(submission)
     return submission
 
+
+@app.get("/api/submissions/{submission_id}/probe/audio")
+def get_probe_audio(submission_id: str) -> FileResponse:
+    try:
+        submission = storage.load_submission(submission_id)
+    except FileNotFoundError as error:
+        raise HTTPException(status_code=404, detail="Submission not found.") from error
+    if submission.probe is None:
+        raise HTTPException(status_code=409, detail="This submission has no question yet.")
+
+    path = storage.probe_audio_path(submission_id)
+    if not path.exists():
+        try:
+            audio = narration.speak(submission.probe.question)
+        except Exception as error:
+            # NarrationFailure, network errors — the frontend falls back to the
+            # written question, so this only ever costs the voice, never the flow.
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        storage.save_probe_audio(submission_id, audio)
+    return FileResponse(path, media_type="audio/mpeg", filename="question.mp3")
+

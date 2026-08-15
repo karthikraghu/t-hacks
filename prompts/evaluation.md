@@ -13,7 +13,9 @@ The payload gives you `assignment_title`, `assignment_brief`, `core_tasks`, `stu
 - Score the written work and the spoken answer separately. A submission can be well written and an
   answer can still fail to account for it; that gap is worth recording rather than averaging away.
 - A short answer that names the real reason is a good answer. Judge whether the thinking is there,
-  not how much was typed.
+  not how much was said.
+- `student_answer` was spoken aloud and transcribed automatically. Ignore punctuation,
+  capitalisation, filler words and small transcription slips; they say nothing about the thinking.
 - Address the student directly and say what to do next, in concrete terms about this piece of work.
 - Do not speculate about how the work was produced, and do not mention AI in the comment.
 

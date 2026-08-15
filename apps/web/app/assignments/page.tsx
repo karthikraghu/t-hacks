@@ -99,7 +99,12 @@ export default function AssignmentsPage() {
         )}
 
         {step === "answer" && submission?.probe && (
-          <ProbeStep busy={busy} onAnswer={answer} probe={submission.probe} />
+          <ProbeStep
+            busy={busy}
+            onAnswer={answer}
+            probe={submission.probe}
+            submissionId={submission.id}
+          />
         )}
 
         {step === "marked" && submission?.evaluation && (
