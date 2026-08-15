@@ -1,0 +1,50 @@
+# Secrets — never commit. Use .env.example as the template.
+.env
+.env.*
+!.env.example
+
+# Python environment and caches
+.python/
+.uv-cache/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+.npm/
+npm-debug.log*
+yarn-error.log*
+
+# Generated lesson output and render scratch space
+artifacts/
+data/jobs/
+jobs/
+media/
+
+# Logs
+*.log
+
+# Local tool state
+.claude/settings.local.json
+.agents/skills/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,900 @@
+{
+  "notice": "A typical topic progression for orientation only; not a binding curriculum mapping for any German state.",
+  "grades": [
+    {
+      "grade": 5,
+      "topics": [
+        {
+          "id": "integers-and-number-line",
+          "label": "Integers and the number line",
+          "subtopics": [
+            {
+              "id": "number-line",
+              "label": "Numbers on the number line",
+              "default_method": "visual_linking",
+              "learning_goal": "Place whole numbers on a number line and compare them by their position.",
+              "misconceptions": [
+                "The marks are read as unequally spaced, so the scale is misjudged.",
+                "A number further to the left is called larger because its digits are larger."
+              ]
+            },
+            {
+              "id": "negative-numbers",
+              "label": "Understanding negative numbers",
+              "default_method": "visual_linking",
+              "learning_goal": "Read and order negative numbers and explain what they mean below zero.",
+              "misconceptions": [
+                "Minus 7 is treated as larger than minus 3 because 7 is larger than 3.",
+                "The minus sign is read as a subtraction instead of as part of the number."
+              ]
+            },
+            {
+              "id": "comparing-and-ordering",
+              "label": "Comparing and ordering numbers",
+              "default_method": "worked_example",
+              "learning_goal": "Order a set of integers and justify each comparison using the number line.",
+              "misconceptions": [
+                "Numbers are compared digit by digit regardless of how many digits they have.",
+                "The symbols for less than and greater than are read in the wrong direction."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "arithmetic-foundations",
+          "label": "Arithmetic and order of operations",
+          "subtopics": [
+            {
+              "id": "order-of-operations",
+              "label": "Order of operations",
+              "default_method": "error_analysis",
+              "learning_goal": "Apply multiplication before addition and use brackets to change the order on purpose.",
+              "misconceptions": [
+                "The expression is evaluated strictly from left to right.",
+                "Brackets are dropped without adjusting the operation that remains."
+              ]
+            },
+            {
+              "id": "divisibility-rules",
+              "label": "Divisibility rules",
+              "default_method": "worked_example",
+              "learning_goal": "Decide whether a number is divisible by 2, 3, 5 or 10 without carrying out the division.",
+              "misconceptions": [
+                "The rule for 3 is applied to the last digit instead of to the digit sum.",
+                "Divisibility by 2 and divisibility by 4 are treated as the same test."
+              ]
+            },
+            {
+              "id": "prime-factorisation",
+              "label": "Prime factors",
+              "default_method": "worked_example",
+              "learning_goal": "Write a natural number as a product of prime factors and explain why that product is unique.",
+              "misconceptions": [
+                "The number 1 is included as a prime factor.",
+                "The factor tree is stopped before every branch has reached a prime."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "geometry-basics",
+          "label": "Geometry basics",
+          "subtopics": [
+            {
+              "id": "angles",
+              "label": "Recognising and measuring angles",
+              "default_method": "visual_linking",
+              "learning_goal": "Measure an angle with a protractor and classify it as acute, right or obtuse.",
+              "misconceptions": [
+                "The outer scale of the protractor is read instead of the inner one.",
+                "The angle is judged by the drawn length of its arms rather than by its opening."
+              ]
+            },
+            {
+              "id": "coordinate-system",
+              "label": "Points in the coordinate system",
+              "default_method": "visual_linking",
+              "learning_goal": "Plot and read points in the coordinate system using ordered pairs.",
+              "misconceptions": [
+                "The first and second coordinate are swapped when plotting.",
+                "Counting starts at the first grid line instead of at the origin."
+              ]
+            },
+            {
+              "id": "axis-symmetry",
+              "label": "Axis symmetry",
+              "default_method": "visual_linking",
+              "learning_goal": "Find the axis of symmetry of a figure and construct the mirror image of a point.",
+              "misconceptions": [
+                "The mirror image is drawn at an unequal distance from the axis.",
+                "A figure is called symmetric although its halves do not match when folded."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quantities-and-area",
+          "label": "Quantities, perimeter and area",
+          "subtopics": [
+            {
+              "id": "units-and-conversion",
+              "label": "Converting units",
+              "default_method": "worked_example",
+              "learning_goal": "Convert between metric units of length, mass and time using the place value structure.",
+              "misconceptions": [
+                "The decimal point is moved by one place instead of by the conversion factor.",
+                "Area units are converted with the same factor as length units."
+              ]
+            },
+            {
+              "id": "rectangle-area",
+              "label": "Area and perimeter of the rectangle",
+              "default_method": "visual_linking",
+              "learning_goal": "Distinguish perimeter from area and calculate both for a rectangle.",
+              "misconceptions": [
+                "Perimeter and area are used interchangeably.",
+                "The area is reported in centimetres instead of in square centimetres."
+              ]
+            },
+            {
+              "id": "composite-figures",
+              "label": "Areas of composite figures",
+              "default_method": "worked_example",
+              "learning_goal": "Split a composite figure into rectangles and add or subtract their areas.",
+              "misconceptions": [
+                "An overlapping part is counted twice.",
+                "A missing side length is guessed instead of derived from the other sides."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "grade": 6,
+      "topics": [
+        {
+          "id": "fractions",
+          "label": "Fractions and rational numbers",
+          "subtopics": [
+            {
+              "id": "equivalent-fractions",
+              "label": "Expanding and reducing fractions",
+              "default_method": "visual_linking",
+              "learning_goal": "Expand and reduce a fraction and explain why its value does not change.",
+              "misconceptions": [
+                "Only the numerator is multiplied when the fraction is expanded.",
+                "A fraction is reduced by subtracting the same number from numerator and denominator."
+              ]
+            },
+            {
+              "id": "adding-fractions",
+              "label": "Adding fractions",
+              "default_method": "error_analysis",
+              "learning_goal": "Add fractions with different denominators by using a common denominator.",
+              "misconceptions": [
+                "Numerators and denominators are added separately.",
+                "A common denominator is found but the numerators are not adjusted with it."
+              ]
+            },
+            {
+              "id": "multiplying-fractions",
+              "label": "Multiplying and dividing fractions",
+              "default_method": "worked_example",
+              "learning_goal": "Multiply fractions directly and divide by multiplying with the reciprocal.",
+              "misconceptions": [
+                "A common denominator is created before multiplying.",
+                "Multiplication is expected to always make the result larger."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "decimals",
+          "label": "Decimal numbers",
+          "subtopics": [
+            {
+              "id": "decimal-place-value",
+              "label": "Place value in decimals",
+              "default_method": "visual_linking",
+              "learning_goal": "Read the place value of each digit after the decimal point and compare decimals.",
+              "misconceptions": [
+                "0.7 is treated as smaller than 0.25 because 25 is larger than 7.",
+                "Trailing zeros are believed to change the value."
+              ]
+            },
+            {
+              "id": "decimal-arithmetic",
+              "label": "Calculating with decimals",
+              "default_method": "worked_example",
+              "learning_goal": "Add, subtract and multiply decimals and place the decimal point correctly.",
+              "misconceptions": [
+                "Digits are aligned at the right edge instead of at the decimal point.",
+                "The number of decimal places in a product is taken from one factor only."
+              ]
+            },
+            {
+              "id": "fraction-decimal-conversion",
+              "label": "Fractions and decimals",
+              "default_method": "visual_linking",
+              "learning_goal": "Convert between fractions and decimals and recognise a repeating decimal.",
+              "misconceptions": [
+                "The fraction bar is read as a decimal point, so one quarter becomes 1.4.",
+                "Every fraction is expected to give a terminating decimal."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "percentages-and-proportion",
+          "label": "Percentages and proportion",
+          "subtopics": [
+            {
+              "id": "percentage-value",
+              "label": "Understanding the percentage value",
+              "default_method": "visual_linking",
+              "learning_goal": "Identify base value, percentage rate and percentage value and calculate the percentage value.",
+              "misconceptions": [
+                "The percentage value is confused with the base value.",
+                "A percentage increase is applied by appending the rate to the number."
+              ]
+            },
+            {
+              "id": "proportional-relationships",
+              "label": "Proportional relationships",
+              "default_method": "visual_linking",
+              "learning_goal": "Recognise a proportional relationship from a table or a graph and use its constant ratio.",
+              "misconceptions": [
+                "Any relationship that increases is treated as proportional.",
+                "The graph is not expected to pass through the origin."
+              ]
+            },
+            {
+              "id": "rule-of-three",
+              "label": "The rule of three",
+              "default_method": "worked_example",
+              "learning_goal": "Solve a proportional problem by reducing to one unit and then scaling up.",
+              "misconceptions": [
+                "The rule of three is applied to an inversely proportional situation.",
+                "The step to one unit is skipped, so the scaling factor is wrong."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "angles-and-areas",
+          "label": "Angles and areas",
+          "subtopics": [
+            {
+              "id": "angles-at-intersections",
+              "label": "Angles at intersecting lines",
+              "default_method": "visual_linking",
+              "learning_goal": "Use vertical and supplementary angles to find unknown angles at intersecting lines.",
+              "misconceptions": [
+                "Vertical angles and adjacent angles are mixed up.",
+                "Angles are assumed to be equal because they look similar in the drawing."
+              ]
+            },
+            {
+              "id": "triangle-area",
+              "label": "Area of the triangle",
+              "default_method": "visual_linking",
+              "learning_goal": "Calculate the area of a triangle and explain where the factor one half comes from.",
+              "misconceptions": [
+                "The factor one half is forgotten.",
+                "A slanted side is used as the height instead of the perpendicular height."
+              ]
+            },
+            {
+              "id": "parallelogram-area",
+              "label": "Area of parallelogram and trapezium",
+              "default_method": "worked_example",
+              "learning_goal": "Calculate the area of a parallelogram and a trapezium using the perpendicular height.",
+              "misconceptions": [
+                "The slanted side is used instead of the perpendicular height.",
+                "For the trapezium only one of the two parallel sides is used."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "grade": 7,
+      "topics": [
+        {
+          "id": "expressions-and-equations",
+          "label": "Expressions and linear equations",
+          "subtopics": [
+            {
+              "id": "simplifying-expressions",
+              "label": "Simplifying expressions",
+              "default_method": "error_analysis",
+              "learning_goal": "Collect like terms and explain why unlike terms cannot be combined.",
+              "misconceptions": [
+                "Terms with different variables are added together.",
+                "The sign in front of a term is dropped when the term is moved."
+              ]
+            },
+            {
+              "id": "solving-linear-equations",
+              "label": "Solving linear equations",
+              "default_method": "worked_example",
+              "learning_goal": "Solve a linear equation by applying the same operation to both sides.",
+              "misconceptions": [
+                "The operation is applied to one side of the equation only.",
+                "Dividing by a negative number leaves the sign unchanged."
+              ]
+            },
+            {
+              "id": "expanding-brackets",
+              "label": "Expanding and factorising",
+              "default_method": "error_analysis",
+              "learning_goal": "Expand a product over a sum and reverse the step by factoring out a common factor.",
+              "misconceptions": [
+                "Only the first term inside the bracket is multiplied.",
+                "A minus in front of a bracket is not applied to every term inside it."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "data-and-constructions",
+          "label": "Data and constructions",
+          "subtopics": [
+            {
+              "id": "mean-and-median",
+              "label": "Mean and median",
+              "default_method": "worked_example",
+              "learning_goal": "Calculate mean and median and say which of the two an outlier distorts.",
+              "misconceptions": [
+                "The median is read off without ordering the data first.",
+                "Mean and median are expected to always coincide."
+              ]
+            },
+            {
+              "id": "constructing-triangles",
+              "label": "Constructing triangles",
+              "default_method": "visual_linking",
+              "learning_goal": "Construct a triangle from given sides and angles with compass and straight edge.",
+              "misconceptions": [
+                "The compass width is changed between two arcs.",
+                "Any three given values are assumed to determine one triangle."
+              ]
+            },
+            {
+              "id": "congruence-theorems",
+              "label": "Congruence theorems",
+              "default_method": "worked_example",
+              "learning_goal": "Use the congruence theorems to decide whether two triangles are congruent.",
+              "misconceptions": [
+                "Equal angles alone are taken as proof of congruence.",
+                "The angle used is not the one enclosed by the two given sides."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "angle-theorems",
+          "label": "Angle theorems",
+          "subtopics": [
+            {
+              "id": "angle-sum-triangle",
+              "label": "Angle sum in the triangle",
+              "default_method": "visual_linking",
+              "learning_goal": "Use the 180 degree angle sum to find a missing angle in a triangle.",
+              "misconceptions": [
+                "The angle sum of a quadrilateral is used for a triangle.",
+                "An exterior angle is added to the interior angles."
+              ]
+            },
+            {
+              "id": "angles-at-parallels",
+              "label": "Angles at parallel lines",
+              "default_method": "visual_linking",
+              "learning_goal": "Identify corresponding and alternate angles at parallel lines cut by a transversal.",
+              "misconceptions": [
+                "Corresponding angles and alternate angles are confused.",
+                "The rules are applied although the two lines are not parallel."
+              ]
+            },
+            {
+              "id": "exterior-angle",
+              "label": "The exterior angle",
+              "default_method": "worked_example",
+              "learning_goal": "Relate an exterior angle to the two non adjacent interior angles.",
+              "misconceptions": [
+                "The exterior angle is set equal to the adjacent interior angle.",
+                "All three interior angles are added instead of only two."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "proportionality",
+          "label": "Direct and inverse proportion",
+          "subtopics": [
+            {
+              "id": "direct-proportion",
+              "label": "Direct proportion",
+              "default_method": "visual_linking",
+              "learning_goal": "Recognise direct proportion and use its constant quotient.",
+              "misconceptions": [
+                "The graph is not expected to pass through the origin.",
+                "Adding a constant is confused with multiplying by a factor."
+              ]
+            },
+            {
+              "id": "inverse-proportion",
+              "label": "Inverse proportion",
+              "default_method": "visual_linking",
+              "learning_goal": "Recognise inverse proportion and use its constant product.",
+              "misconceptions": [
+                "Inverse proportion is handled with the constant quotient rule.",
+                "The graph is drawn as a straight line."
+              ]
+            },
+            {
+              "id": "proportion-in-context",
+              "label": "Proportion in applications",
+              "default_method": "worked_example",
+              "learning_goal": "Decide from the context whether a relationship is directly or inversely proportional.",
+              "misconceptions": [
+                "Every relationship in a word problem is assumed to be proportional.",
+                "Doubling one quantity is assumed to double the other."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "grade": 8,
+      "topics": [
+        {
+          "id": "linear-functions",
+          "label": "Linear functions",
+          "subtopics": [
+            {
+              "id": "understanding-slope",
+              "label": "Understanding slope",
+              "hero": true,
+              "default_method": "auto",
+              "learning_goal": "Explain and calculate slope as the ratio of the change in height to the change across.",
+              "misconceptions": [
+                "The numerator and denominator of dy/dx are swapped.",
+                "Slope is read off a single point instead of between two points."
+              ]
+            },
+            {
+              "id": "line-equation",
+              "label": "Line equation y = mx + b",
+              "default_method": "visual_linking",
+              "learning_goal": "Read slope and y-intercept from a line equation and sketch the matching graph.",
+              "misconceptions": [
+                "The roles of m and b are swapped when reading the equation.",
+                "The value of b is read as an x-value instead of as the y-intercept."
+              ]
+            },
+            {
+              "id": "intercepts-and-zeros",
+              "label": "Zero and axis intercepts",
+              "default_method": "worked_example",
+              "learning_goal": "Find the zero of a linear function and mark both axis intercepts on the graph.",
+              "misconceptions": [
+                "The zero of the function is read off the y-axis.",
+                "Setting y to zero and setting x to zero are interchanged."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "systems-and-probability",
+          "label": "Systems of equations and probability",
+          "subtopics": [
+            {
+              "id": "linear-systems",
+              "label": "Systems of linear equations",
+              "default_method": "worked_example",
+              "learning_goal": "Solve a system of two linear equations and interpret the solution as a point of intersection.",
+              "misconceptions": [
+                "The substitution is put back into the same equation it came from.",
+                "A system without a solution is reported as x equals zero."
+              ]
+            },
+            {
+              "id": "laplace-experiments",
+              "label": "Laplace experiments",
+              "default_method": "visual_linking",
+              "learning_goal": "Calculate a probability as favourable outcomes divided by equally likely outcomes.",
+              "misconceptions": [
+                "Outcomes that are not equally likely are treated as a Laplace experiment.",
+                "A probability is given as a number greater than one."
+              ]
+            },
+            {
+              "id": "tree-diagrams",
+              "label": "Tree diagrams",
+              "default_method": "visual_linking",
+              "learning_goal": "Use a tree diagram to find the probability of a two stage experiment.",
+              "misconceptions": [
+                "Probabilities along one path are added instead of multiplied.",
+                "The branch probabilities leaving one node do not add up to one."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "circle-geometry",
+          "label": "The circle",
+          "subtopics": [
+            {
+              "id": "circle-circumference",
+              "label": "Circumference of the circle",
+              "default_method": "visual_linking",
+              "learning_goal": "Relate circumference and diameter through pi and calculate the circumference.",
+              "misconceptions": [
+                "The radius is used where the diameter is required.",
+                "Pi is treated as exactly 3.14 rather than as an approximation."
+              ]
+            },
+            {
+              "id": "circle-area",
+              "label": "Area of the circle",
+              "default_method": "visual_linking",
+              "learning_goal": "Calculate the area of a circle and distinguish it clearly from the circumference.",
+              "misconceptions": [
+                "The formulas for area and circumference are swapped.",
+                "The radius is not squared."
+              ]
+            },
+            {
+              "id": "circle-sectors",
+              "label": "Sectors and arcs",
+              "default_method": "worked_example",
+              "learning_goal": "Calculate arc length and sector area as a fraction of the whole circle.",
+              "misconceptions": [
+                "The central angle is not related to the full 360 degrees.",
+                "Arc length is calculated with the area formula."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "terms-and-fractions",
+          "label": "Binomial formulas and fraction terms",
+          "subtopics": [
+            {
+              "id": "binomial-formulas",
+              "label": "The binomial formulas",
+              "default_method": "error_analysis",
+              "learning_goal": "Apply the three binomial formulas to expand and to factorise.",
+              "misconceptions": [
+                "The middle term with the factor two is omitted.",
+                "A squared difference is expanded as a difference of squares."
+              ]
+            },
+            {
+              "id": "fraction-terms",
+              "label": "Simplifying fraction terms",
+              "default_method": "error_analysis",
+              "learning_goal": "Reduce a fraction term by factorising first and state the excluded values.",
+              "misconceptions": [
+                "A summand is cancelled instead of a factor.",
+                "The values that make the denominator zero are not excluded."
+              ]
+            },
+            {
+              "id": "equations-with-fractions",
+              "label": "Equations with fraction terms",
+              "default_method": "worked_example",
+              "learning_goal": "Solve an equation containing fractions by multiplying with the common denominator.",
+              "misconceptions": [
+                "Only one term is multiplied by the common denominator.",
+                "A solution that makes a denominator zero is accepted."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "grade": 9,
+      "topics": [
+        {
+          "id": "roots-and-pythagoras",
+          "label": "Square roots and the Pythagorean theorem",
+          "subtopics": [
+            {
+              "id": "square-roots",
+              "label": "Understanding square roots",
+              "default_method": "visual_linking",
+              "learning_goal": "Read a square root as the side length of a square and estimate it between two whole numbers.",
+              "misconceptions": [
+                "The square root is treated as half of the number.",
+                "A negative number is given a real square root."
+              ]
+            },
+            {
+              "id": "pythagorean-theorem",
+              "label": "The Pythagorean theorem",
+              "default_method": "visual_linking",
+              "learning_goal": "Use the Pythagorean theorem to find a missing side in a right angled triangle.",
+              "misconceptions": [
+                "The hypotenuse is not identified as the side opposite the right angle.",
+                "The squares are added but the root is never taken."
+              ]
+            },
+            {
+              "id": "real-numbers",
+              "label": "Rational and irrational numbers",
+              "default_method": "visual_linking",
+              "learning_goal": "Distinguish rational from irrational numbers and place both on the number line.",
+              "misconceptions": [
+                "Every square root is assumed to be irrational.",
+                "A repeating decimal is classified as irrational."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quadratics-and-similarity",
+          "label": "Quadratics and similarity",
+          "subtopics": [
+            {
+              "id": "quadratic-functions",
+              "label": "Quadratic functions",
+              "default_method": "visual_linking",
+              "learning_goal": "Describe how the coefficients shape the parabola and locate its vertex.",
+              "misconceptions": [
+                "A plus inside the bracket is read as a shift to the right.",
+                "A negative leading coefficient is thought to move the parabola down rather than to open it downward."
+              ]
+            },
+            {
+              "id": "similarity-and-intercept-theorem",
+              "label": "Similarity and the intercept theorem",
+              "default_method": "visual_linking",
+              "learning_goal": "Use the intercept theorem to find a missing length between similar figures.",
+              "misconceptions": [
+                "Corresponding sides are paired incorrectly.",
+                "Differences of lengths are compared instead of ratios."
+              ]
+            },
+            {
+              "id": "quadratic-equations",
+              "label": "Solving quadratic equations",
+              "default_method": "worked_example",
+              "learning_goal": "Solve a quadratic equation and use the discriminant to say how many solutions exist.",
+              "misconceptions": [
+                "Only the positive root is reported.",
+                "The equation is not brought into standard form before the formula is applied."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "solid-geometry",
+          "label": "Prisms and pyramids",
+          "subtopics": [
+            {
+              "id": "prism-volume",
+              "label": "Volume of the prism",
+              "default_method": "visual_linking",
+              "learning_goal": "Calculate the volume of a prism as base area times height.",
+              "misconceptions": [
+                "A slanted edge is used as the height.",
+                "The volume is reported in square units."
+              ]
+            },
+            {
+              "id": "pyramid-volume",
+              "label": "Volume of the pyramid",
+              "default_method": "visual_linking",
+              "learning_goal": "Calculate the volume of a pyramid and explain where the factor one third comes from.",
+              "misconceptions": [
+                "The factor one third is forgotten.",
+                "The slant height is used instead of the perpendicular height."
+              ]
+            },
+            {
+              "id": "surface-area",
+              "label": "Surface area of solids",
+              "default_method": "worked_example",
+              "learning_goal": "Find the surface area of a prism or a pyramid from its net.",
+              "misconceptions": [
+                "A face is counted twice or left out entirely.",
+                "The volume formula is used where the surface area is asked for."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "data-and-chance",
+          "label": "Data and chance",
+          "subtopics": [
+            {
+              "id": "relative-frequency",
+              "label": "Relative frequency",
+              "default_method": "visual_linking",
+              "learning_goal": "Distinguish relative frequency from probability and describe what happens over many trials.",
+              "misconceptions": [
+                "A short run of trials is expected to match the probability exactly.",
+                "Past outcomes are believed to influence the next one."
+              ]
+            },
+            {
+              "id": "counting-outcomes",
+              "label": "Counting outcomes",
+              "default_method": "worked_example",
+              "learning_goal": "Count the outcomes of a multi stage experiment with the product rule.",
+              "misconceptions": [
+                "Outcomes of the stages are added instead of multiplied.",
+                "Order is ignored in a situation where it matters."
+              ]
+            },
+            {
+              "id": "box-plots",
+              "label": "Box plots and spread",
+              "default_method": "visual_linking",
+              "learning_goal": "Read median, quartiles and range from a box plot.",
+              "misconceptions": [
+                "The box is read as containing all of the data.",
+                "A wider box is read as a higher average."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "grade": 10,
+      "topics": [
+        {
+          "id": "growth-and-logarithms",
+          "label": "Exponential growth and logarithms",
+          "subtopics": [
+            {
+              "id": "exponential-growth",
+              "label": "Exponential growth",
+              "default_method": "visual_linking",
+              "learning_goal": "Describe exponential growth by its constant growth factor and contrast it with linear growth.",
+              "misconceptions": [
+                "A constant difference is used where a constant factor is required.",
+                "A growth of five percent is modelled by adding five each step."
+              ]
+            },
+            {
+              "id": "logarithms",
+              "label": "Understanding logarithms",
+              "default_method": "worked_example",
+              "learning_goal": "Read a logarithm as the exponent that produces a given value and solve a simple exponential equation.",
+              "misconceptions": [
+                "The logarithm of a sum is split into a sum of logarithms.",
+                "The base of the logarithm is ignored."
+              ]
+            },
+            {
+              "id": "exponential-functions",
+              "label": "Graphs of exponential functions",
+              "default_method": "visual_linking",
+              "learning_goal": "Describe how the base and a factor change the graph of an exponential function.",
+              "misconceptions": [
+                "The graph is expected to cross the x-axis.",
+                "A base between zero and one is not recognised as decay."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigonometry-and-space",
+          "label": "Trigonometry and solid geometry",
+          "subtopics": [
+            {
+              "id": "sine-and-cosine",
+              "label": "Sine and cosine",
+              "default_method": "visual_linking",
+              "learning_goal": "Define sine and cosine as ratios in the right angled triangle and find a missing side with them.",
+              "misconceptions": [
+                "The opposite and the adjacent side are swapped.",
+                "The calculator is left in the wrong angle mode."
+              ]
+            },
+            {
+              "id": "cone-and-sphere",
+              "label": "Cone and sphere",
+              "default_method": "visual_linking",
+              "learning_goal": "Calculate volume and surface area of a cone and of a sphere.",
+              "misconceptions": [
+                "The slant height is used as the height in the volume formula.",
+                "The factor one third is applied to the sphere as well."
+              ]
+            },
+            {
+              "id": "tangent-right-triangles",
+              "label": "The tangent ratio",
+              "default_method": "worked_example",
+              "learning_goal": "Use the tangent ratio to find an angle or a side in a right angled triangle.",
+              "misconceptions": [
+                "The tangent ratio is applied to the hypotenuse.",
+                "The inverse function is not used when the angle is the unknown."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigonometric-functions",
+          "label": "Trigonometric functions",
+          "subtopics": [
+            {
+              "id": "sine-function-graph",
+              "label": "The sine function",
+              "default_method": "visual_linking",
+              "learning_goal": "Describe period and amplitude of the sine function and read both from its graph.",
+              "misconceptions": [
+                "Amplitude and period are confused.",
+                "The graph is expected to stop after one period."
+              ]
+            },
+            {
+              "id": "sine-cosine-rule",
+              "label": "Sine rule and cosine rule",
+              "default_method": "worked_example",
+              "learning_goal": "Choose between the sine rule and the cosine rule for a triangle without a right angle.",
+              "misconceptions": [
+                "The Pythagorean theorem is applied to a triangle without a right angle.",
+                "The second possible angle in the sine rule is overlooked."
+              ]
+            },
+            {
+              "id": "unit-circle",
+              "label": "The unit circle",
+              "default_method": "visual_linking",
+              "learning_goal": "Read sine and cosine of an angle as coordinates of a point on the unit circle.",
+              "misconceptions": [
+                "Sine and cosine are read on the wrong axis.",
+                "Angles beyond 90 degrees are treated as undefined."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "power-functions",
+          "label": "Power functions and transformations",
+          "subtopics": [
+            {
+              "id": "power-function-graphs",
+              "label": "Power functions",
+              "default_method": "visual_linking",
+              "learning_goal": "Compare the graphs of power functions with even and with odd exponents.",
+              "misconceptions": [
+                "A negative exponent is read as a negative function value.",
+                "Every power function is expected to pass through the origin."
+              ]
+            },
+            {
+              "id": "function-transformations",
+              "label": "Shifting and stretching graphs",
+              "default_method": "visual_linking",
+              "learning_goal": "Predict how adding or multiplying a constant shifts or stretches a graph.",
+              "misconceptions": [
+                "A plus inside the function argument is read as a shift to the right.",
+                "A factor in front of the function is thought to shift the graph vertically."
+              ]
+            },
+            {
+              "id": "hyperbola",
+              "label": "The hyperbola",
+              "default_method": "visual_linking",
+              "learning_goal": "Describe the graph of the reciprocal function and its behaviour near the axes.",
+              "misconceptions": [
+                "The graph is expected to touch the axes.",
+                "The two branches are joined into one curve through zero."
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
