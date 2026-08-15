@@ -110,9 +110,10 @@ export interface Assignment {
   tasks: AssignmentTask[];
 }
 
-export interface SubmissionProbe {
+export interface SubmissionExchange {
   question: string;
-  quoted_span: string;
+  quoted_span?: string | null;
+  answer?: string | null;
 }
 
 export interface SubmissionEvaluation {
@@ -130,7 +131,6 @@ export interface Submission {
   assignment_id: string;
   state: SubmissionState;
   core_response: string;
-  probe?: SubmissionProbe | null;
-  probe_answer?: string | null;
+  exchanges: SubmissionExchange[];
   evaluation?: SubmissionEvaluation | null;
 }

@@ -1286,10 +1286,22 @@ button.ruler-seg:hover {
   margin: 4px 0 0;
 }
 
-.probe-transcript {
-  border: 1px dashed var(--rule);
-  border-radius: var(--radius-s);
+.probe-recording {
   color: var(--ink-2);
-  min-height: 64px;
-  padding: 12px 14px;
+}
+
+.probe-recording::before {
+  animation: probe-pulse 1.2s ease-in-out infinite;
+  background: var(--marker);
+  border-radius: 50%;
+  content: "";
+  display: inline-block;
+  height: 10px;
+  margin-right: 8px;
+  width: 10px;
+}
+
+@keyframes probe-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
 }

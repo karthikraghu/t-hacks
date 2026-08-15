@@ -19,7 +19,7 @@ from .models import (
     StoryboardState,
     Submission,
     SubmissionEvaluation,
-    SubmissionProbe,
+    SubmissionExchange,
     SubmissionRequest,
     SubmissionState,
 )
@@ -250,10 +250,9 @@ def probe_submission(submission_id: str) -> Submission:
     if not grounding.grounded:
         raise HTTPException(status_code=422, detail="; ".join(grounding.issues))
 
-    submission.probe = SubmissionProbe(
-        question=generated.question,
-        quoted_span=generated.quoted_span,
-    )
+    submission.exchanges = [
+        SubmissionExchange(question=generated.question, quoted_span=generated.quoted_span)
+    ]
     submission.state = SubmissionState.PROBED
     storage.save_submission(submission)
     return submission
@@ -265,9 +264,9 @@ def answer_probe(submission_id: str, request: ProbeAnswerRequest) -> Submission:
         submission = storage.load_submission(submission_id)
     except FileNotFoundError as error:
         raise HTTPException(status_code=404, detail="Submission not found.") from error
-    # ANSWERED is legal here as well as PROBED: the answer is saved before the model is
-    # asked, so a marking failure leaves the submission in ANSWERED. Accepting only
-    # PROBED would 409 every retry and strand the student with no mark.
+    # ANSWERED is legal here as well as PROBED: answers are saved before any model is
+    # asked, so a failed follow-up or marking call can simply be retried. Accepting
+    # only PROBED would 409 every retry and strand the student with no mark.
     if submission.state not in (SubmissionState.PROBED, SubmissionState.ANSWERED):
         raise HTTPException(
             status_code=409,
@@ -278,17 +277,36 @@ def answer_probe(submission_id: str, request: ProbeAnswerRequest) -> Submission:
     except FileNotFoundError as error:
         raise HTTPException(status_code=404, detail="Assignment not found.") from error
 
-    # Recorded before the model is asked, so a marking failure never costs the student
-    # their words.
-    submission.probe_answer = request.answer
-    submission.state = SubmissionState.ANSWERED
-    storage.save_submission(submission)
+    if submission.state == SubmissionState.PROBED:
+        # Recorded before any model is asked, so a failure never costs the student
+        # their words. On a retry after a failed follow-up call the open question is
+        # already answered, and the recording step is skipped rather than overwritten.
+        if submission.exchanges[-1].answer is None:
+            submission.exchanges[-1].answer = request.answer
+            storage.save_submission(submission)
+
+        # The hard cap is structural: once the limit is reached the model is never
+        # even asked whether it wants another question.
+        if len(submission.exchanges) < settings.assignment_question_limit:
+            try:
+                follow = ai.follow_up_question(assignment, submission)
+            except Exception as error:
+                raise HTTPException(status_code=422, detail=str(error)) from error
+            if not follow.done and follow.question.strip():
+                submission.exchanges.append(
+                    SubmissionExchange(question=follow.question.strip())
+                )
+                storage.save_submission(submission)
+                return submission
+
+        submission.state = SubmissionState.ANSWERED
+        storage.save_submission(submission)
 
     try:
         generated = ai.evaluate_submission(assignment, submission)
     except Exception as error:
         # Same mapping as the probe route: any model-call failure is a 422 sentence.
-        # The answer was already saved above, so the student can simply retry.
+        # The answers were already saved above, so the student can simply retry.
         raise HTTPException(status_code=422, detail=str(error)) from error
 
     # The weighting is arithmetic here, not a number the model chose: how much the
@@ -310,23 +328,23 @@ def answer_probe(submission_id: str, request: ProbeAnswerRequest) -> Submission:
     return submission
 
 
-@app.get("/api/submissions/{submission_id}/probe/audio")
-def get_probe_audio(submission_id: str) -> FileResponse:
+@app.get("/api/submissions/{submission_id}/probe/audio/{index}")
+def get_probe_audio(submission_id: str, index: int) -> FileResponse:
     try:
         submission = storage.load_submission(submission_id)
     except FileNotFoundError as error:
         raise HTTPException(status_code=404, detail="Submission not found.") from error
-    if submission.probe is None:
-        raise HTTPException(status_code=409, detail="This submission has no question yet.")
+    if index < 0 or index >= len(submission.exchanges):
+        raise HTTPException(status_code=404, detail="This question does not exist yet.")
 
-    path = storage.probe_audio_path(submission_id)
+    path = storage.probe_audio_path(submission_id, index)
     if not path.exists():
         try:
-            audio = narration.speak(submission.probe.question)
+            audio = narration.speak(submission.exchanges[index].question)
         except Exception as error:
             # NarrationFailure, network errors — the frontend falls back to the
             # written question, so this only ever costs the voice, never the flow.
             raise HTTPException(status_code=422, detail=str(error)) from error
-        storage.save_probe_audio(submission_id, audio)
+        storage.save_probe_audio(submission_id, index, audio)
     return FileResponse(path, media_type="audio/mpeg", filename="question.mp3")
 

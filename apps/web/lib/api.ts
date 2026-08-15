@@ -52,5 +52,6 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ answer }),
     }),
-  probeAudioUrl: (submissionId: string) => `${API_URL}/api/submissions/${submissionId}/probe/audio`,
+  probeAudioUrl: (submissionId: string, index: number) =>
+    `${API_URL}/api/submissions/${submissionId}/probe/audio/${index}`,
 };

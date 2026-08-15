@@ -64,9 +64,10 @@ export default function AssignmentsPage() {
     setBusy(true);
     setError(null);
     try {
-      const marked = await api.answerProbe(submission.id, text);
-      setSubmission(marked);
-      setStep("marked");
+      const updated = await api.answerProbe(submission.id, text);
+      setSubmission(updated);
+      // Either the conversation continues with a fresh question, or it is marked.
+      if (updated.state === "evaluated") setStep("marked");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "The answer could not be marked.");
     } finally {
@@ -98,11 +99,14 @@ export default function AssignmentsPage() {
           />
         )}
 
-        {step === "answer" && submission?.probe && (
+        {step === "answer" && submission && submission.exchanges.length > 0 && (
           <ProbeStep
             busy={busy}
+            exchange={submission.exchanges[submission.exchanges.length - 1]}
+            index={submission.exchanges.length - 1}
+            // Keyed by question so every follow-up remounts the listen-answer cycle.
+            key={submission.exchanges.length - 1}
             onAnswer={answer}
-            probe={submission.probe}
             submissionId={submission.id}
           />
         )}

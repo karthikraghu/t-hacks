@@ -24,11 +24,11 @@ export function EvaluationStep({ evaluation }: Props) {
               <span className="u-mono">{evaluation.core_score}</span>
             </p>
             <p>
-              <span className="u-label">Your answer</span>{" "}
+              <span className="u-label">Your answers</span>{" "}
               <span className="u-mono">{evaluation.probe_score}</span>
             </p>
             <p>
-              <span className="u-label">Answer counts for</span>{" "}
+              <span className="u-label">Answers count for</span>{" "}
               <span className="u-mono">{Math.round(evaluation.probe_weight * 100)}%</span>
             </p>
           </div>

@@ -183,15 +183,26 @@ class SubmissionRequest(BaseModel):
 
 class GeneratedProbe(BaseModel):
     # One scalar question field, never a list. The provider physically cannot return
-    # two questions against this schema, which is what makes "exactly one" structural
-    # rather than a prompt instruction the model may drift from.
+    # two questions against this schema, which is what makes "one question at a time"
+    # structural rather than a prompt instruction the model may drift from.
     question: str = Field(min_length=10, max_length=240)
     quoted_span: str = Field(min_length=4, max_length=200)
 
 
-class SubmissionProbe(BaseModel):
+class GeneratedFollowUp(BaseModel):
+    # `done` rather than a nullable question: both fields stay required, which keeps
+    # the schema strict-mode safe, and an accidental empty question cannot silently
+    # end the conversation — `done` has to say so explicitly.
+    done: bool
     question: str
-    quoted_span: str
+
+
+class SubmissionExchange(BaseModel):
+    question: str
+    # Only the opening question quotes the written work; follow-ups chase the
+    # spoken answers, which are too loosely transcribed to gate on a quote.
+    quoted_span: str | None = None
+    answer: str | None = None
 
 
 class ProbeAnswerRequest(BaseModel):
@@ -227,6 +238,5 @@ class Submission(BaseModel):
     assignment_id: str
     state: SubmissionState
     core_response: str
-    probe: SubmissionProbe | None = None
-    probe_answer: str | None = None
+    exchanges: list[SubmissionExchange] = Field(default_factory=list)
     evaluation: SubmissionEvaluation | None = None

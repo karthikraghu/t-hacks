@@ -2,14 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
-import type { SubmissionProbe } from "@/lib/types";
+import type { SubmissionExchange } from "@/lib/types";
 
-/** Seconds the student has to gather their thoughts after hearing the question. */
-const THINKING_SECONDS = 10;
-/** Maximum seconds of spoken answer; the transcript is sent when this runs out. */
+/** Maximum seconds of spoken answer; whatever was heard is sent when this runs out. */
 const ANSWER_SECONDS = 30;
 
-type Phase = "ready" | "listening" | "thinking" | "speaking" | "typing";
+type Phase = "ready" | "listening" | "answering" | "waiting" | "typing";
 
 /* The Web Speech API is not in TypeScript's DOM lib, so the shape used here is
    declared locally — only the members this component touches. */
@@ -39,16 +37,22 @@ function recognitionConstructor(): (new () => SpeechRecognitionLike) | null {
 
 interface Props {
   busy: boolean;
+  exchange: SubmissionExchange;
+  index: number;
   onAnswer: (answer: string) => Promise<void>;
-  probe: SubmissionProbe;
   submissionId: string;
 }
 
-export function ProbeStep({ busy, onAnswer, probe, submissionId }: Props) {
+/* Mounted once per question — the parent keys this component by the exchange index,
+   so every new question starts the listen-then-answer cycle afresh. */
+export function ProbeStep({ busy, exchange, index, onAnswer, submissionId }: Props) {
   const [phase, setPhase] = useState<Phase>("ready");
   const [secondsLeft, setSecondsLeft] = useState(0);
-  const [transcript, setTranscript] = useState("");
   const [note, setNote] = useState<string | null>(null);
+  // What the microphone heard. Deliberately never rendered while speaking: watching
+  // your own words appear mid-sentence derails the answer. It only becomes visible
+  // in the typed fallback.
+  const [transcript, setTranscript] = useState("");
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
@@ -67,19 +71,14 @@ export function ProbeStep({ busy, onAnswer, probe, submissionId }: Props) {
     }
   }
 
-  function beginThinking() {
-    if (phaseRef.current === "thinking") return;
-    setPhase("thinking");
-    setSecondsLeft(THINKING_SECONDS);
-  }
-
   function fallBackToTyping(reason: string) {
     stopRecognition();
     setNote(reason);
     setPhase("typing");
   }
 
-  function beginSpeaking() {
+  function beginAnswering() {
+    if (phaseRef.current === "answering") return;
     const Recognition = recognitionConstructor();
     if (!Recognition) {
       fallBackToTyping("Speech input is not available in this browser, so type your answer instead.");
@@ -91,8 +90,8 @@ export function ProbeStep({ busy, onAnswer, probe, submissionId }: Props) {
     recognition.lang = "en-GB";
     recognition.onresult = (event) => {
       let heard = "";
-      for (let index = 0; index < event.results.length; index += 1) {
-        heard += event.results[index][0].transcript;
+      for (let position = 0; position < event.results.length; position += 1) {
+        heard += event.results[position][0].transcript;
       }
       setTranscript(heard.trim());
     };
@@ -103,7 +102,7 @@ export function ProbeStep({ busy, onAnswer, probe, submissionId }: Props) {
     };
     // Chrome ends recognition after short silences; keep listening for the whole window.
     recognition.onend = () => {
-      if (phaseRef.current === "speaking" && recognitionRef.current === recognition) {
+      if (phaseRef.current === "answering" && recognitionRef.current === recognition) {
         try {
           recognition.start();
         } catch {
@@ -113,28 +112,29 @@ export function ProbeStep({ busy, onAnswer, probe, submissionId }: Props) {
     };
     recognitionRef.current = recognition;
     recognition.start();
-    setPhase("speaking");
+    setPhase("answering");
     setSecondsLeft(ANSWER_SECONDS);
   }
 
   function send(answer: string) {
     if (sentRef.current) return;
     sentRef.current = true;
-    // On success the parent unmounts this step; if marking fails the guard is
-    // released so the answer can simply be sent again.
+    setPhase("waiting");
+    // On success the parent moves to the next question or the mark, which replaces
+    // this component; if the call fails the guard is released and the words are
+    // shown in the typed box so they can simply be sent again.
     void onAnswer(answer).finally(() => {
       sentRef.current = false;
+      setPhase("typing");
     });
   }
 
-  function finishSpeaking(spoken: string) {
+  function finishAnswering(spoken: string) {
     stopRecognition();
     const answer = spoken.trim();
-    // Kept visible in the typing phase so a failed marking call can be resent,
-    // and so an unheard answer can be typed instead.
-    setPhase("typing");
     if (!answer) {
       setNote("Nothing was heard, so type your answer instead.");
+      setPhase("typing");
       return;
     }
     setNote(null);
@@ -142,24 +142,35 @@ export function ProbeStep({ busy, onAnswer, probe, submissionId }: Props) {
   }
 
   function askTheQuestion() {
-    // Surface the microphone prompt now, not mid-answer when the clock is running.
+    // Surface the microphone prompt now, not mid-answer while the clock is running.
     navigator.mediaDevices
       ?.getUserMedia({ audio: true })
       .then((stream) => stream.getTracks().forEach((track) => track.stop()))
       .catch(() => undefined);
     const audio = audioRef.current;
     if (!audio) {
-      beginThinking();
+      beginAnswering();
       return;
     }
     setPhase("listening");
-    audio.play().catch(() => beginThinking());
+    audio.play().catch(() => beginAnswering());
   }
 
-  // One clock for both timed phases. The transition at zero happens here so a
-  // re-render can never skip it.
+  // Follow-up questions start speaking on their own so the conversation flows; if
+  // the browser refuses the unprompted playback, the ready button remains.
   useEffect(() => {
-    if (phase !== "thinking" && phase !== "speaking") return;
+    if (index === 0) return;
+    const audio = audioRef.current;
+    if (!audio) return;
+    setPhase("listening");
+    audio.play().catch(() => setPhase("ready"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index]);
+
+  // One clock for the answering window. The transition at zero happens in the
+  // effect below so a re-render can never skip it.
+  useEffect(() => {
+    if (phase !== "answering") return;
     const timer = setInterval(() => {
       setSecondsLeft((current) => (current > 0 ? current - 1 : 0));
     }, 1000);
@@ -167,9 +178,8 @@ export function ProbeStep({ busy, onAnswer, probe, submissionId }: Props) {
   }, [phase]);
 
   useEffect(() => {
-    if (secondsLeft > 0) return;
-    if (phase === "thinking") beginSpeaking();
-    if (phase === "speaking") finishSpeaking(transcript);
+    if (secondsLeft > 0 || phase !== "answering") return;
+    finishAnswering(transcript);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [secondsLeft, phase]);
 
@@ -193,30 +203,33 @@ export function ProbeStep({ busy, onAnswer, probe, submissionId }: Props) {
   return (
     <>
       <div className="page-head">
-        <p className="u-label">One question</p>
+        <p className="u-label">Question {index + 1} of up to 3</p>
         <h1 className="u-display">About your own reasoning</h1>
       </div>
 
       {/* preload="auto" so the narration is generated while the student reads the intro */}
       <audio
-        onEnded={beginThinking}
-        onError={beginThinking}
+        onEnded={beginAnswering}
+        onError={beginAnswering}
         preload="auto"
         ref={audioRef}
-        src={api.probeAudioUrl(submissionId)}
+        src={api.probeAudioUrl(submissionId, index)}
       />
 
       {phase === "ready" && (
         <>
-          <div className="alert alert-info" role="note">
-            <p>
-              You will hear one question about your own work. After it is read out, you have ten
-              seconds to think, and then thirty seconds to speak your answer aloud.
-            </p>
-          </div>
+          {index === 0 && (
+            <div className="alert alert-info" role="note">
+              <p>
+                You will have a short spoken conversation about your own work — up to three
+                questions. Each question is read aloud, and you then have thirty seconds to
+                answer it out loud.
+              </p>
+            </div>
+          )}
           <div className="mark-actions">
             <button className="btn btn-primary" onClick={askTheQuestion} type="button">
-              I am ready — ask the question
+              {index === 0 ? "I am ready — ask the question" : "Hear the next question"}
             </button>
           </div>
         </>
@@ -224,41 +237,33 @@ export function ProbeStep({ busy, onAnswer, probe, submissionId }: Props) {
 
       {phase !== "ready" && (
         <div className="probe-card">
-          <p>{probe.question}</p>
-          <p className="probe-quote">“{probe.quoted_span}”</p>
+          <p>{exchange.question}</p>
+          {exchange.quoted_span && <p className="probe-quote">“{exchange.quoted_span}”</p>}
         </div>
       )}
 
       {phase === "listening" && <p className="u-muted">Listen to the question.</p>}
 
-      {phase === "thinking" && (
-        <div className="probe-timer-block">
-          <p className="u-label">Think about your answer</p>
-          <p className="probe-timer u-mono">{secondsLeft}</p>
-        </div>
-      )}
-
-      {phase === "speaking" && (
+      {phase === "answering" && (
         <>
           <div className="probe-timer-block">
-            <p className="u-label">Speak now — your answer is being written down</p>
+            <p className="probe-recording">Speak your answer aloud</p>
             <p className="probe-timer u-mono">{secondsLeft}</p>
-          </div>
-          <div className="probe-transcript" aria-live="polite">
-            {transcript || "Waiting to hear you…"}
           </div>
           <div className="mark-actions">
             <button
               className="btn btn-primary"
               disabled={busy}
-              onClick={() => finishSpeaking(transcript)}
+              onClick={() => finishAnswering(transcript)}
               type="button"
             >
-              Send answer now
+              I have finished answering
             </button>
           </div>
         </>
       )}
+
+      {phase === "waiting" && <p className="u-muted">One moment…</p>}
 
       {phase === "typing" && (
         <div className="mark-form">
@@ -278,7 +283,7 @@ export function ProbeStep({ busy, onAnswer, probe, submissionId }: Props) {
           </div>
           <div className="mark-actions">
             <button className="btn btn-primary" disabled={busy} onClick={sendTyped} type="button">
-              {busy ? "Marking…" : "Send answer"}
+              {busy ? "One moment…" : "Send answer"}
             </button>
           </div>
         </div>

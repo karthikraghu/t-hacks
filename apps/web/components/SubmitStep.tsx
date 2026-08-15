@@ -43,8 +43,8 @@ export function SubmitStep({ busy, draft, onDraft, onExample, onSubmit }: Props)
 
       <div className="approve-bar">
         <p className="u-muted">
-          After you hand in, you will be asked one question about your own reasoning. It counts
-          towards the mark.
+          After you hand in, you will have a short spoken conversation about your own reasoning —
+          up to three questions. It counts towards the mark.
         </p>
         <div className="approve-actions">
           <button className="btn btn-primary" disabled={busy} type="submit">

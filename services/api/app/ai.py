@@ -13,6 +13,7 @@ from .hero import hero_storyboard
 from .models import (
     Assignment,
     GeneratedEvaluation,
+    GeneratedFollowUp,
     GeneratedProbe,
     GeneratedSection,
     GeneratedStoryboard,
@@ -207,6 +208,35 @@ class AIService:
             ]
         )
 
+    def follow_up_question(
+        self, assignment: Assignment, submission: Submission
+    ) -> GeneratedFollowUp:
+        if not self.settings.model_is_configured:
+            raise ModelNotConfigured("Continuing the conversation requires a configured model.")
+        context = {
+            "assignment_title": assignment.title,
+            "assignment_brief": assignment.brief,
+            "core_tasks": [
+                task.description for task in assignment.tasks if task.mode == TaskMode.CORE
+            ],
+            "student_response": submission.core_response,
+            "conversation": [
+                {"question": exchange.question, "answer": exchange.answer or ""}
+                for exchange in submission.exchanges
+            ],
+        }
+        examiner = self.model.with_structured_output(GeneratedFollowUp, method="json_schema")
+        return examiner.invoke(
+            [
+                SystemMessage(
+                    content="\n\n".join(
+                        [self.prompt("shared_education.md"), self.prompt("follow_up.md")]
+                    )
+                ),
+                HumanMessage(content=json.dumps(context, ensure_ascii=False)),
+            ]
+        )
+
     def evaluate_submission(
         self, assignment: Assignment, submission: Submission
     ) -> GeneratedEvaluation:
@@ -219,8 +249,10 @@ class AIService:
                 task.description for task in assignment.tasks if task.mode == TaskMode.CORE
             ],
             "student_response": submission.core_response,
-            "question": submission.probe.question if submission.probe else "",
-            "student_answer": submission.probe_answer or "",
+            "conversation": [
+                {"question": exchange.question, "answer": exchange.answer or ""}
+                for exchange in submission.exchanges
+            ],
         }
         marker = self.model.with_structured_output(GeneratedEvaluation, method="json_schema")
         return marker.invoke(
