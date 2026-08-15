@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     lesson_max_sections: int = 6
     lesson_min_seconds: int = 25
     lesson_max_seconds: int = 120
+    # How much of the mark comes from the spoken answer rather than the written work.
+    # 0.4 is high on purpose: the answer is the only part of a submission that cannot
+    # be delegated, so it has to be worth enough to matter.
+    assignment_probe_weight: float = 0.4
     manim_command: str = "manim"
     ffmpeg_command: str = "ffmpeg"
     # Per subprocess call, not per pipeline. A 100 second lesson renders at roughly 1.8x

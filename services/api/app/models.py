@@ -24,6 +24,18 @@ class StoryboardState(StrEnum):
     APPROVED = "approved"
 
 
+class TaskMode(StrEnum):
+    AI_ASSISTABLE = "ai_assistable"
+    CORE = "core"
+
+
+class SubmissionState(StrEnum):
+    SUBMITTED = "submitted"
+    PROBED = "probed"
+    ANSWERED = "answered"
+    EVALUATED = "evaluated"
+
+
 class JobStatus(StrEnum):
     PLANNING = "planning"
     AWAITING_APPROVAL = "awaiting_approval"
@@ -141,3 +153,80 @@ class RendererResult(BaseModel):
     frames: list[str] = Field(default_factory=list)
     video: str | None = None
     cards: list[str] = Field(default_factory=list)
+
+
+class AssignmentTask(BaseModel):
+    description: str
+    mode: TaskMode
+    rationale: str
+
+
+class Assignment(BaseModel):
+    id: str
+    title: str
+    brief: str
+    tasks: list[AssignmentTask]
+
+
+class SubmissionRequest(BaseModel):
+    # Deliberately loose. Pydantic body validation produces FastAPI's own 422 body,
+    # which bypasses the handcrafted `detail` sentences the frontend renders, so the
+    # meaningful minimum is checked in the route instead. This bound only stops an
+    # absurd payload from reaching the model.
+    core_response: str = Field(min_length=1, max_length=6000)
+
+    @field_validator("core_response")
+    @classmethod
+    def trim_core_response(cls, value: str) -> str:
+        return value.strip()
+
+
+class GeneratedProbe(BaseModel):
+    # One scalar question field, never a list. The provider physically cannot return
+    # two questions against this schema, which is what makes "exactly one" structural
+    # rather than a prompt instruction the model may drift from.
+    question: str = Field(min_length=10, max_length=240)
+    quoted_span: str = Field(min_length=4, max_length=200)
+
+
+class SubmissionProbe(BaseModel):
+    question: str
+    quoted_span: str
+
+
+class ProbeAnswerRequest(BaseModel):
+    answer: str = Field(min_length=1, max_length=2000)
+
+    @field_validator("answer")
+    @classmethod
+    def trim_answer(cls, value: str) -> str:
+        return value.strip()
+
+
+class GeneratedEvaluation(BaseModel):
+    core_score: int = Field(ge=0, le=100)
+    probe_score: int = Field(ge=0, le=100)
+    strengths: list[str] = Field(default_factory=list, max_length=4)
+    gaps: list[str] = Field(default_factory=list, max_length=4)
+    comment: str = Field(min_length=20, max_length=800)
+
+
+class SubmissionEvaluation(BaseModel):
+    core_score: int
+    probe_score: int
+    weighted_score: float
+    # Stored beside the score so a mark stays auditable after the setting changes.
+    probe_weight: float
+    strengths: list[str] = Field(default_factory=list)
+    gaps: list[str] = Field(default_factory=list)
+    comment: str
+
+
+class Submission(BaseModel):
+    id: str
+    assignment_id: str
+    state: SubmissionState
+    core_response: str
+    probe: SubmissionProbe | None = None
+    probe_answer: str | None = None
+    evaluation: SubmissionEvaluation | None = None
