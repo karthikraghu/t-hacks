@@ -4,7 +4,8 @@ Teaching methods:
   labels as well.
 - worked_example: Develop one example step by step and explain the decisions.
 - error_analysis: Show a plausible mistake, explain its cause, and contrast it with the correct reasoning.
-- auto: Choose one or at most two suitable methods. For slope, combine visual_linking and worked_example.
+- auto: Choose one or at most two suitable methods, following the subject guidance below when it names
+  the selected topic.
 
 Levels:
 

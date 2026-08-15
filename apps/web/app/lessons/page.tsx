@@ -10,13 +10,13 @@ import { StepRail } from "@/components/StepRail";
 import { api } from "@/lib/api";
 import { activeStatuses, lessonSteps } from "@/lib/labels";
 import type {
-  Catalog,
   LessonRequest,
   Level,
   Method,
   RenderJob,
   Storyboard,
   StoryboardSection,
+  Subject,
   Subtopic,
 } from "@/lib/types";
 
@@ -32,27 +32,39 @@ function fromSubtopic(subtopic: Subtopic) {
   } satisfies Partial<LessonRequest>;
 }
 
-/** The hero subtopic if the catalogue marks one, otherwise the first thing it lists. */
-function openingSelection(catalog: Catalog): LessonRequest | null {
-  for (const grade of catalog.grades) {
+/** The subject's hero subtopic if its catalogue marks one, otherwise its first entry. */
+function openingSelection(subject: Subject): LessonRequest | null {
+  for (const grade of subject.catalog.grades) {
     for (const topic of grade.topics) {
       const hero = topic.subtopics.find((entry) => entry.hero);
       if (hero) {
-        return { grade: grade.grade, topic_id: topic.id, level: "standard", ...fromSubtopic(hero) };
+        return {
+          subject_id: subject.id,
+          grade: grade.grade,
+          topic_id: topic.id,
+          level: "standard",
+          ...fromSubtopic(hero),
+        };
       }
     }
   }
-  const grade = catalog.grades[0];
+  const grade = subject.catalog.grades[0];
   const topic = grade?.topics[0];
   const subtopic = topic?.subtopics[0];
   if (!grade || !topic || !subtopic) return null;
-  return { grade: grade.grade, topic_id: topic.id, level: "standard", ...fromSubtopic(subtopic) };
+  return {
+    subject_id: subject.id,
+    grade: grade.grade,
+    topic_id: topic.id,
+    level: "standard",
+    ...fromSubtopic(subtopic),
+  };
 }
 
 export default function LessonsPage() {
-  const [catalog, setCatalog] = useState<Catalog | null>(null);
+  const [subjects, setSubjects] = useState<Subject[] | null>(null);
   const [step, setStep] = useState<Step>("setup");
-  // Held empty until the catalogue arrives, so no grade or topic id is written twice.
+  // Held empty until the catalogues arrive, so no grade or topic id is written twice.
   const [lesson, setLesson] = useState<LessonRequest | null>(null);
   const [storyboard, setStoryboard] = useState<Storyboard | null>(null);
   const [job, setJob] = useState<RenderJob | null>(null);
@@ -64,18 +76,22 @@ export default function LessonsPage() {
   const headingRef = useRef<HTMLHeadingElement | null>(null);
   const startedAt = useRef<number>(0);
 
-  // The catalogue chooses what opens: the subtopic it marks as the hero, or its first
-  // entry. Nothing here names a grade or an id, so the two cannot drift apart.
+  // The catalogue chooses what opens: the first subject's hero subtopic, or its first
+  // entry. Nothing here names a subject, grade or id, so the two cannot drift apart.
   useEffect(() => {
     api
-      .catalog()
+      .subjects()
       .then((loaded) => {
-        setCatalog(loaded);
-        const opening = openingSelection(loaded);
+        setSubjects(loaded.subjects);
+        const first = loaded.subjects[0];
+        const opening = first ? openingSelection(first) : null;
         if (opening) setLesson(opening);
       })
       .catch((reason: Error) => setError(reason.message));
   }, []);
+
+  // Everything below reads the active subject's catalogue through this one lookup.
+  const catalog = subjects?.find((entry) => entry.id === lesson?.subject_id)?.catalog ?? null;
 
   // Poll only while the job is genuinely in flight; the status is the only trigger.
   const jobId = job?.id;
@@ -112,6 +128,16 @@ export default function LessonsPage() {
     lastStep.current = step;
     headingRef.current?.focus();
   }, [step]);
+
+  const selectSubject = useCallback(
+    (subjectId: string) => {
+      const subject = subjects?.find((candidate) => candidate.id === subjectId);
+      if (!subject) return;
+      const opening = openingSelection(subject);
+      if (opening) setLesson(opening);
+    },
+    [subjects],
+  );
 
   const selectGrade = useCallback(
     (grade: number) => {
@@ -238,9 +264,11 @@ export default function LessonsPage() {
               onObjective={(objective) =>
                 setLesson((current) => (current ? { ...current, objective } : current))
               }
+              onSubject={selectSubject}
               onSubmit={writeScript}
               onSubtopic={selectSubtopic}
               onTopic={selectTopic}
+              subjects={subjects ?? []}
             />
           ) : (
             <SetupSkeleton />

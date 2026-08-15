@@ -22,7 +22,8 @@ class Settings(BaseSettings):
     elevenlabs_voice_id: str = ""
     elevenlabs_model_id: str = "eleven_multilingual_v2"
     artifact_root: Path = REPO_ROOT / "jobs"
-    catalog_path: Path = REPO_ROOT / "content" / "math" / "catalog.json"
+    # Every directory under here with a pack.json is a subject pack.
+    content_root: Path = REPO_ROOT / "content"
     prompt_root: Path = REPO_ROOT / "prompts"
     fallback_root: Path = REPO_ROOT / "fallback"
     allow_hero_fallback: bool = True

@@ -6,12 +6,12 @@ from time import perf_counter
 from typing import Iterator
 
 from .ai import AIService
-from .catalog import Catalog
 from .models import Artifact, JobStatus, RenderJob, Storyboard
 from .narration import ElevenLabsNarration
 from .rendering import LocalRenderer
 from .settings import Settings
 from .storage import Storage
+from .subjects import SubjectRegistry
 
 
 class GenerationPipeline:
@@ -19,18 +19,22 @@ class GenerationPipeline:
         self,
         settings: Settings,
         storage: Storage,
-        catalog: Catalog,
+        subjects: SubjectRegistry,
         ai: AIService,
         narration: ElevenLabsNarration,
         renderer: LocalRenderer,
     ) -> None:
         self.settings = settings
         self.storage = storage
-        self.catalog = catalog
+        self.subjects = subjects
         self.ai = ai
         self.narration = narration
         self.renderer = renderer
         self._single_job = Semaphore(1)
+
+    def _fallback_dir(self, storyboard: Storyboard):  # type: ignore[no-untyped-def]
+        """Each subject carries its own rendered hero bundle."""
+        return self.settings.fallback_root / storyboard.request.subject_id
 
     def _update(self, job: RenderJob, status: JobStatus, message: str) -> None:
         job.status = status
@@ -143,12 +147,13 @@ class GenerationPipeline:
         self._update(job, JobStatus.READY, "The video and recap cards are ready.")
 
         # Only seed the fallback when it is missing. The bundled hero is the deliberately
-        # polished render from fallback/hero_lesson.py; overwriting it with whatever the last
-        # live run happened to produce would quietly degrade the demo safety net.
-        if self.catalog.is_hero(storyboard.request):
+        # polished render from the pack's fallback bundle; overwriting it with whatever the
+        # last live run happened to produce would quietly degrade the demo safety net.
+        if self.subjects.is_hero(storyboard.request):
+            fallback_dir = self._fallback_dir(storyboard)
             bundle = ["lesson.mp4", "recap_1.png", "recap_2.png", "recap_3.png"]
-            if not all((self.settings.fallback_root / name).exists() for name in bundle):
-                self.storage.cache_fallback(self.settings.fallback_root, job.id)
+            if not all((fallback_dir / name).exists() for name in bundle):
+                self.storage.cache_fallback(fallback_dir, job.id)
 
     def _fallback_or_fail(self, job: RenderJob, storyboard: Storyboard, error: Exception) -> None:
         safe_error = str(error)
@@ -159,9 +164,9 @@ class GenerationPipeline:
         ]:
             if secret:
                 safe_error = safe_error.replace(secret, "[secret]")
-        if self.settings.allow_hero_fallback and self.catalog.is_hero(storyboard.request):
+        if self.settings.allow_hero_fallback and self.subjects.is_hero(storyboard.request):
             try:
-                self.storage.copy_fallback(self.settings.fallback_root, job.id)
+                self.storage.copy_fallback(self._fallback_dir(storyboard), job.id)
                 job.artifacts = [
                     Artifact(name="lesson.mp4", kind="video", url=f"/api/jobs/{job.id}/artifacts/lesson.mp4"),
                     *[

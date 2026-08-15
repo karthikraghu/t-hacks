@@ -49,7 +49,13 @@ class JobStatus(StrEnum):
 
 
 class LessonRequest(BaseModel):
-    grade: int = Field(ge=5, le=10)
+    # The default is load-bearing: storyboards persisted before subjects existed carry
+    # no subject_id and must still deserialize as maths lessons.
+    subject_id: str = Field(default="math", min_length=1, max_length=40)
+    # Loose sanity bounds only. Which grades actually exist is the subject pack's
+    # catalogue to decide — physics starts later than maths — and resolve() rejects
+    # any grade the catalogue does not carry.
+    grade: int = Field(ge=1, le=13)
     topic_id: str = Field(min_length=1, max_length=80)
     subtopic_id: str = Field(min_length=1, max_length=80)
     level: Level = Level.STANDARD

@@ -17,7 +17,7 @@ and so on.
 3. A label describes the wrong element, for example "6 up" printed beside a horizontal arrow.
 4. An element from an earlier section is still visible after the section changed.
 5. Text is so small, pale or low in contrast that it would not read in a classroom.
-6. A core element of the visual plan is missing, or the mathematics shown contradicts the storyboard, for
+6. A core element of the visual plan is missing, or the content shown contradicts the storyboard, for
    example different numbers or a wrong result.
 
 # Approve the render otherwise

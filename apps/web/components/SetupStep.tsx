@@ -2,7 +2,7 @@
 
 import { FormEvent, RefObject } from "react";
 import { levelLabels, levels, methodLabels, methods } from "@/lib/labels";
-import type { Catalog, LessonRequest, Level, Method } from "@/lib/types";
+import type { Catalog, LessonRequest, Level, Method, Subject } from "@/lib/types";
 
 interface Props {
   busy: boolean;
@@ -13,9 +13,11 @@ interface Props {
   onLevel: (level: Level) => void;
   onMethod: (method: Method) => void;
   onObjective: (objective: string) => void;
+  onSubject: (subjectId: string) => void;
   onSubmit: () => void;
   onSubtopic: (subtopicId: string) => void;
   onTopic: (topicId: string) => void;
+  subjects: Subject[];
 }
 
 export function SetupStep({
@@ -27,9 +29,11 @@ export function SetupStep({
   onLevel,
   onMethod,
   onObjective,
+  onSubject,
   onSubmit,
   onSubtopic,
   onTopic,
+  subjects,
 }: Props) {
   const grade = catalog.grades.find((entry) => entry.grade === lesson.grade);
   const topic = grade?.topics.find((entry) => entry.id === lesson.topic_id);
@@ -57,6 +61,26 @@ export function SetupStep({
       </div>
 
       <div className="card">
+        {/* With a single installed pack the choice does not exist, so neither does the row. */}
+        {subjects.length > 1 && (
+          <fieldset className="section section-set">
+            <legend className="u-label">Subject</legend>
+            <div className="choice-row">
+              {subjects.map((entry) => (
+                <label className="choice" key={entry.id}>
+                  <input
+                    checked={entry.id === lesson.subject_id}
+                    name="subject"
+                    onChange={() => onSubject(entry.id)}
+                    type="radio"
+                  />
+                  <span className="choice-pill">{entry.label}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        )}
+
         <fieldset className="section section-set">
           <legend className="u-label">Grade</legend>
           <div className="choice-row">

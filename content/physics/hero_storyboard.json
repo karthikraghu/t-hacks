@@ -1,0 +1,64 @@
+{
+  "title": "Distance-time graphs: how a line tells speed",
+  "learning_objective": "Read speed as the steepness of a distance-time graph and compare two motions by their lines.",
+  "selected_methods": ["visual_linking", "worked_example"],
+  "sections": [
+    {
+      "title": "A journey becomes a line",
+      "purpose": "Everyday starting point",
+      "narration": "A cyclist rides along a straight road. Every second, we note how far she has come and mark it in a graph: time runs to the right, distance runs upwards. The marks line up, and her whole journey becomes one rising line.",
+      "visual_plan": "A coordinate system with time on the x axis and distance on the y axis. Points appear one per second and a straight line grows through them.",
+      "on_screen_text": ["time in s", "distance in m"],
+      "latex": [],
+      "duration_seconds": 17
+    },
+    {
+      "title": "Steeper means faster",
+      "purpose": "Build the graphical picture",
+      "narration": "Now a second cyclist starts at the same moment, but covers more distance in every second. Her line climbs more steeply. That is the whole secret of this graph: the steeper the line, the faster the motion. The line does not show the road. It shows the progress.",
+      "visual_plan": "Two lines from the origin with clearly different steepness. A moving point on each line advances during the same time span; the steeper line's point gets further.",
+      "on_screen_text": ["steeper = faster"],
+      "latex": [],
+      "duration_seconds": 20
+    },
+    {
+      "title": "Reading the speed",
+      "purpose": "Worked example",
+      "narration": "Let us read the first cyclist's speed straight from the graph. Between second one and second four, three seconds pass, and the distance grows by six metres. Speed is distance divided by time: six metres divided by three seconds gives two metres per second. Every second, two metres.",
+      "visual_plan": "The formula builds up in three large steps: the general ratio, the values read from the graph with units, and the result highlighted.",
+      "on_screen_text": ["distance", "time"],
+      "latex": ["v = \\frac{s}{t}", "v = \\frac{6\\,\\mathrm{m}}{3\\,\\mathrm{s}} = 2\\,\\mathrm{\\frac{m}{s}}"],
+      "duration_seconds": 22
+    },
+    {
+      "title": "Your turn",
+      "purpose": "Recall and summary",
+      "narration": "Remember: in a distance-time graph, steepness is speed. Now here is something to think about. One line in a graph runs perfectly flat for a while. What is the cyclist doing during that time? Explain your answer in one sentence.",
+      "visual_plan": "The key statement and a small graph with a flat segment appear. The thinking question then stays large and calm on screen.",
+      "on_screen_text": ["What does flat mean?"],
+      "latex": ["v = \\frac{s}{t}"],
+      "duration_seconds": 18,
+      "check_prompt": "Explain in one sentence what a flat segment in a distance-time graph says about the motion."
+    }
+  ],
+  "recap_cards": [
+    {
+      "title": "Steepness is speed",
+      "message": "The steeper the line in a distance-time graph, the faster the motion.",
+      "visual_plan": "Two lines of different steepness from the origin, the steeper one marked as faster.",
+      "latex": []
+    },
+    {
+      "title": "Speed as a ratio",
+      "message": "Distance covered divided by the time taken, always with its unit.",
+      "visual_plan": "The formula next to the values read from the graph.",
+      "latex": ["v = \\frac{s}{t}"]
+    },
+    {
+      "title": "Worked example",
+      "message": "Six metres in three seconds gives two metres per second.",
+      "visual_plan": "Graph with the time span and distance gain marked, next to the calculation.",
+      "latex": ["v = \\frac{6\\,\\mathrm{m}}{3\\,\\mathrm{s}} = 2\\,\\mathrm{\\frac{m}{s}}"]
+    }
+  ]
+}

@@ -7,7 +7,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from .ai import AIService, ModelNotConfigured
-from .catalog import Catalog
 from .models import (
     JobStatus,
     LessonRequest,
@@ -30,14 +29,15 @@ from .rendering import LocalRenderer
 from .seed_assignment import seed_assignment
 from .settings import get_settings
 from .storage import Storage
+from .subjects import SubjectRegistry
 
 settings = get_settings()
 storage = Storage(settings.artifact_root)
-catalog = Catalog(settings.catalog_path)
-ai = AIService(settings)
+subjects = SubjectRegistry(settings.content_root)
+ai = AIService(settings, subjects)
 narration = ElevenLabsNarration(settings)
 renderer = LocalRenderer(settings)
-pipeline = GenerationPipeline(settings, storage, catalog, ai, narration, renderer)
+pipeline = GenerationPipeline(settings, storage, subjects, ai, narration, renderer)
 
 # The worked example is rewritten at import, so the assignment list is never empty on a
 # fresh machine and an older stored copy picks up edits to the seed. It holds no user
@@ -68,20 +68,27 @@ def health() -> dict[str, object]:
     }
 
 
+@app.get("/api/subjects")
+def get_subjects() -> dict[str, object]:
+    return {"subjects": subjects.as_list()}
+
+
+# Kept as an alias for the founding subject's catalogue, so clients written before
+# subjects existed keep working while they migrate to /api/subjects.
 @app.get("/api/catalog")
 def get_catalog() -> dict[str, object]:
-    return catalog.as_dict()
+    return subjects.default_pack().catalog
 
 
 @app.post("/api/storyboards", response_model=Storyboard)
 def create_storyboard(request: LessonRequest) -> Storyboard:
     try:
-        topic, subtopic = catalog.resolve(request)
+        _, topic, subtopic = subjects.resolve(request)
         generated, generated_live = ai.create_storyboard(
             request,
             topic,
             subtopic,
-            permit_hero_draft=catalog.is_hero(request) and settings.allow_hero_fallback,
+            permit_hero_draft=subjects.is_hero(request) and settings.allow_hero_fallback,
         )
     except (ValueError, ModelNotConfigured, RuntimeError) as error:
         raise HTTPException(status_code=422, detail=str(error)) from error

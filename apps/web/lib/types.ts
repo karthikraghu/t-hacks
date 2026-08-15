@@ -26,7 +26,19 @@ export interface Catalog {
   grades: GradeCatalog[];
 }
 
+/** One subject pack: its identity and its own catalogue. */
+export interface Subject {
+  id: string;
+  label: string;
+  catalog: Catalog;
+}
+
+export interface SubjectsResponse {
+  subjects: Subject[];
+}
+
 export interface LessonRequest {
+  subject_id: string;
   grade: number;
   topic_id: string;
   subtopic_id: string;

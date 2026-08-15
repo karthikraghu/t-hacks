@@ -9,12 +9,12 @@ from uuid import uuid4
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
-from services.api.app.hero import hero_storyboard  # noqa: E402
 from services.api.app.models import LessonRequest, StoryboardSection  # noqa: E402
 from services.api.app.narration import ElevenLabsNarration  # noqa: E402
 from services.api.app.rendering import LocalRenderer  # noqa: E402
 from services.api.app.settings import get_settings  # noqa: E402
 from services.api.app.storage import Storage  # noqa: E402
+from services.api.app.subjects import SubjectRegistry  # noqa: E402
 
 
 def source_with_durations(source: str, durations: list[float]) -> str:
@@ -40,7 +40,8 @@ def main() -> None:
         level="standard",
         method="auto",
     )
-    generated = hero_storyboard(request)
+    registry = SubjectRegistry(settings.content_root)
+    generated = registry.pack(request.subject_id).hero_storyboard(request)
     sections = [
         StoryboardSection(id=f"hero-{index}", **section.model_dump())
         for index, section in enumerate(generated.sections, start=1)
@@ -54,7 +55,8 @@ def main() -> None:
     (job_dir / "captions.srt").write_text(narration.srt, encoding="utf-8")
     (job_dir / "narration.txt").write_text(narration.text, encoding="utf-8")
 
-    fixed_source = (settings.fallback_root / "hero_lesson.py").read_text(encoding="utf-8")
+    fallback_dir = settings.fallback_root / request.subject_id
+    fixed_source = (fallback_dir / "hero_lesson.py").read_text(encoding="utf-8")
     (job_dir / "lesson.py").write_text(
         source_with_durations(fixed_source, narration.section_durations),
         encoding="utf-8",
@@ -68,8 +70,8 @@ def main() -> None:
     if not final.success or not final.video or len(final.cards) != 3:
         raise SystemExit(f"Hero-Finalrender fehlgeschlagen: {final.message}")
 
-    storage.cache_fallback(settings.fallback_root, job_id)
-    print(f"Fallback artifacts created: {settings.fallback_root.resolve()}")
+    storage.cache_fallback(fallback_dir, job_id)
+    print(f"Fallback artifacts created: {fallback_dir.resolve()}")
     print(f"Render job for visual inspection: {job_dir.resolve()}")
 
 

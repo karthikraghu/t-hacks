@@ -9,7 +9,6 @@ from typing import Any
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from .hero import hero_storyboard
 from .models import (
     Assignment,
     GeneratedEvaluation,
@@ -25,6 +24,7 @@ from .models import (
     VisualReview,
 )
 from .settings import Settings
+from .subjects import SubjectPack, SubjectRegistry
 
 
 class ModelNotConfigured(RuntimeError):
@@ -32,8 +32,9 @@ class ModelNotConfigured(RuntimeError):
 
 
 class AIService:
-    def __init__(self, settings: Settings) -> None:
+    def __init__(self, settings: Settings, subjects: SubjectRegistry) -> None:
         self.settings = settings
+        self.subjects = subjects
 
     @cached_property
     def model(self):  # type: ignore[no-untyped-def]
@@ -66,15 +67,18 @@ class AIService:
             "recap_cards": 3,
         }
 
-    def storyboard_prompt(self) -> str:
-        return "\n\n".join(
-            [
-                self.prompt("shared_education.md"),
-                self.prompt("math.md"),
-                self.prompt("methods.md"),
-                self.prompt("storyboard.md"),
-            ]
-        )
+    def storyboard_prompt(self, pack: SubjectPack) -> str:
+        # The planner half of the pack's layout vocabulary rides with the storyboard
+        # prompt, so the planner only plans section shapes the codegen half can build.
+        parts = [
+            self.prompt("shared_education.md"),
+            pack.subject_prompt(),
+            self.prompt("methods.md"),
+            pack.methods_prompt(),
+            self.prompt("storyboard.md"),
+            pack.planner_layouts(),
+        ]
+        return "\n\n".join(part for part in parts if part)
 
     def create_storyboard(
         self,
@@ -84,9 +88,10 @@ class AIService:
         *,
         permit_hero_draft: bool,
     ) -> tuple[GeneratedStoryboard, bool]:
+        pack = self.subjects.pack(request.subject_id)
         if not self.settings.model_is_configured:
             if permit_hero_draft:
-                return hero_storyboard(request), False
+                return pack.hero_storyboard(request), False
             raise ModelNotConfigured("This topic requires a configured model.")
 
         payload = {
@@ -97,13 +102,13 @@ class AIService:
         }
         planner = self.model.with_structured_output(GeneratedStoryboard, method="json_schema")
         generated = planner.invoke(
-            [SystemMessage(content=self.storyboard_prompt()), HumanMessage(content=json.dumps(payload, ensure_ascii=False))]
+            [SystemMessage(content=self.storyboard_prompt(pack)), HumanMessage(content=json.dumps(payload, ensure_ascii=False))]
         )
 
         reviewer = self.model.with_structured_output(StoryboardReview, method="json_schema")
         review = reviewer.invoke(
             [
-                SystemMessage(content="\n\n".join([self.prompt("shared_education.md"), self.prompt("math.md"), self.prompt("review.md")])),
+                SystemMessage(content="\n\n".join([self.prompt("shared_education.md"), pack.subject_prompt(), self.prompt("review.md")])),
                 HumanMessage(content=generated.model_dump_json(indent=2)),
             ]
         )
@@ -124,13 +129,33 @@ class AIService:
             "section": section.model_dump(mode="json"),
             "teacher_comment": comment,
         }
+        pack = self.subjects.pack(storyboard.request.subject_id)
         model = self.model.with_structured_output(GeneratedSection, method="json_schema")
         return model.invoke(
             [
-                SystemMessage(content="\n\n".join([self.prompt("shared_education.md"), self.prompt("math.md"), self.prompt("revision.md")])),
+                SystemMessage(
+                    content="\n\n".join(
+                        part
+                        for part in [
+                            self.prompt("shared_education.md"),
+                            pack.subject_prompt(),
+                            # The rewritten visual plan must stay inside the shapes the
+                            # codegen layouts can build, same as the original plan.
+                            pack.planner_layouts(),
+                            self.prompt("revision.md"),
+                        ]
+                        if part
+                    )
+                ),
                 HumanMessage(content=json.dumps(context, ensure_ascii=False)),
             ]
         )
+
+    def codegen_prompt(self, storyboard: Storyboard) -> str:
+        # Subject prose never reached codegen before packs existed; the codegen half of
+        # the pack's layout vocabulary is the one subject-specific thing it needs.
+        pack = self.subjects.pack(storyboard.request.subject_id)
+        return "\n\n".join([self.prompt("manim_codegen.md"), pack.codegen_layouts()])
 
     def generate_code(self, storyboard: Storyboard, section_durations: list[float]) -> str:
         if not self.settings.model_is_configured:
@@ -140,14 +165,14 @@ class AIService:
             "section_durations_seconds": section_durations,
         }
         response = self.model.invoke(
-            [SystemMessage(content=self.prompt("manim_codegen.md")), HumanMessage(content=json.dumps(payload, ensure_ascii=False))]
+            [SystemMessage(content=self.codegen_prompt(storyboard)), HumanMessage(content=json.dumps(payload, ensure_ascii=False))]
         )
         return self._plain_text(response.content)
 
     def repair_code(self, code: str, issues: list[str], storyboard: Storyboard, section_durations: list[float]) -> str:
         response = self.model.invoke(
             [
-                SystemMessage(content="\n\n".join([self.prompt("manim_codegen.md"), self.prompt("repair.md")])),
+                SystemMessage(content="\n\n".join([self.codegen_prompt(storyboard), self.prompt("repair.md")])),
                 HumanMessage(
                     content=json.dumps(
                         {
@@ -169,10 +194,12 @@ class AIService:
         if not self.settings.model_is_configured:
             return VisualReview(approved=True, issues=[])
 
+        pack_rules = self.subjects.pack(storyboard.request.subject_id).review_prompt()
+        review_prompt = self.prompt("visual_review.md") + (f"\n\n{pack_rules}" if pack_rules else "")
         content: list[dict[str, Any]] = [
             {
                 "type": "text",
-                "text": self.prompt("visual_review.md") + "\n\n" + storyboard.model_dump_json(indent=2),
+                "text": review_prompt + "\n\n" + storyboard.model_dump_json(indent=2),
             }
         ]
         for frame in frame_paths:

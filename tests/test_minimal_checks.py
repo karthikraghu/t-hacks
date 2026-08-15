@@ -7,8 +7,6 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from services.api.app import main
-from services.api.app.catalog import Catalog
-from services.api.app.hero import hero_storyboard
 from services.api.app.models import (
     GeneratedSection,
     JobStatus,
@@ -26,6 +24,7 @@ from services.api.app.pipeline import GenerationPipeline
 from services.api.app.rendering import LocalRenderer
 from services.api.app.settings import REPO_ROOT, Settings
 from services.api.app.storage import Storage
+from services.api.app.subjects import SubjectRegistry
 from services.api.app.validation import validate_manim_source
 
 
@@ -50,7 +49,7 @@ class FakeAI:
         self.repair_calls = 0
 
     def generate_code(self, storyboard: Storyboard, section_durations: list[float]) -> str:
-        return (REPO_ROOT / "fallback" / "hero_lesson.py").read_text(encoding="utf-8")
+        return (REPO_ROOT / "fallback" / "math" / "hero_lesson.py").read_text(encoding="utf-8")
 
     def review_frames(self, storyboard: Storyboard, frame_paths: list[Path]) -> VisualReview:
         return VisualReview(approved=self.preview_approved, issues=[] if self.preview_approved else ["Vorschau fehlerhaft"])
@@ -116,14 +115,14 @@ class MinimalHackathonChecks(unittest.TestCase):
             _env_file=None,
             model_name="",
             artifact_root=root / "runtime",
-            catalog_path=REPO_ROOT / "content" / "math" / "catalog.json",
+            content_root=REPO_ROOT / "content",
             prompt_root=REPO_ROOT / "prompts",
             fallback_root=root / "fallback",
             manim_command="manim",
             ffmpeg_command="ffmpeg",
         )
         self.storage = Storage(self.settings.artifact_root)
-        self.catalog = Catalog(self.settings.catalog_path)
+        self.subjects = SubjectRegistry(self.settings.content_root)
         self.request = LessonRequest(
             grade=8,
             topic_id="linear-functions",
@@ -131,7 +130,7 @@ class MinimalHackathonChecks(unittest.TestCase):
             level="standard",
             method="auto",
         )
-        generated = hero_storyboard(self.request)
+        generated = self.subjects.pack("math").hero_storyboard(self.request)
         self.storyboard = Storyboard(
             id=uuid4().hex,
             request=self.request,
@@ -182,7 +181,7 @@ class MinimalHackathonChecks(unittest.TestCase):
         pipeline = GenerationPipeline(
             self.settings,
             self.storage,
-            self.catalog,
+            self.subjects,
             FakeAI(),
             SuccessfulNarration(),
             SuccessfulRenderer(self.storage),
@@ -203,7 +202,7 @@ class MinimalHackathonChecks(unittest.TestCase):
         job_id = "renderer-optimizations"
         job_dir = self.storage.job_dir(job_id)
         code_path = job_dir / "lesson.py"
-        code_path.write_text((REPO_ROOT / "fallback" / "hero_lesson.py").read_text(encoding="utf-8"), encoding="utf-8")
+        code_path.write_text((REPO_ROOT / "fallback" / "math" / "hero_lesson.py").read_text(encoding="utf-8"), encoding="utf-8")
 
         preview_media = job_dir / "preview_media"
         preview_media.mkdir()
@@ -316,7 +315,7 @@ class RecapCard3(Scene): pass
         pipeline = GenerationPipeline(
             self.settings,
             self.storage,
-            self.catalog,
+            self.subjects,
             ai,
             SuccessfulNarration(),
             FailingRenderer(secret),
@@ -337,7 +336,7 @@ class RecapCard3(Scene): pass
         pipeline = GenerationPipeline(
             self.settings,
             self.storage,
-            self.catalog,
+            self.subjects,
             ai,
             SuccessfulNarration(),
             SuccessfulRenderer(self.storage),
@@ -385,9 +384,10 @@ class RecapCard3(Scene): pass
         self.assertTrue(any("section_1" in issue for issue in issues))
 
     def test_cached_hero_fallback_is_labeled(self) -> None:
-        self.settings.fallback_root.mkdir(parents=True)
+        fallback_dir = self.settings.fallback_root / "math"
+        fallback_dir.mkdir(parents=True)
         for name in ["lesson.mp4", "recap_1.png", "recap_2.png", "recap_3.png"]:
-            (self.settings.fallback_root / name).write_bytes(name.encode("ascii"))
+            (fallback_dir / name).write_bytes(name.encode("ascii"))
 
         self.storyboard.state = StoryboardState.APPROVED
         self.storage.save_storyboard(self.storyboard)
@@ -395,7 +395,7 @@ class RecapCard3(Scene): pass
         pipeline = GenerationPipeline(
             self.settings,
             self.storage,
-            self.catalog,
+            self.subjects,
             FakeAI(),
             FailingNarration(),
             SuccessfulRenderer(self.storage),

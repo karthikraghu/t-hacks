@@ -1,9 +1,9 @@
 import type {
   AssignmentsResponse,
-  Catalog,
   LessonRequest,
   RenderJob,
   Storyboard,
+  SubjectsResponse,
   Submission,
 } from "./types";
 
@@ -34,7 +34,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  catalog: () => request<Catalog>("/api/catalog"),
+  subjects: () => request<SubjectsResponse>("/api/subjects"),
   createStoryboard: (lesson: LessonRequest) =>
     request<Storyboard>("/api/storyboards", { method: "POST", body: JSON.stringify(lesson) }),
   reviseSection: (storyboardId: string, sectionId: string, comment: string) =>

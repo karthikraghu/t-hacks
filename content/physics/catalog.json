@@ -1,0 +1,161 @@
+{
+  "notice": "A typical topic progression for orientation only; not a binding curriculum mapping for any German state.",
+  "grades": [
+    {
+      "grade": 7,
+      "topics": [
+        {
+          "id": "motion-and-speed",
+          "label": "Motion and speed",
+          "subtopics": [
+            {
+              "id": "distance-time-graphs",
+              "label": "Reading distance-time graphs",
+              "hero": true,
+              "default_method": "visual_linking",
+              "learning_goal": "Read speed as the steepness of a distance-time graph and compare two motions by their lines.",
+              "misconceptions": [
+                "The graph is read as a picture of the path, so a rising line is taken for going uphill.",
+                "A higher line is called faster, even where a lower line is steeper."
+              ]
+            },
+            {
+              "id": "calculating-speed",
+              "label": "Calculating speed",
+              "default_method": "worked_example",
+              "learning_goal": "Calculate speed as distance divided by time and state the result with its unit.",
+              "misconceptions": [
+                "Distance and time are divided the wrong way round.",
+                "The result is stated without a unit, so metres per second and kilometres per hour blur together."
+              ]
+            },
+            {
+              "id": "uniform-motion",
+              "label": "Recognising uniform motion",
+              "default_method": "error_analysis",
+              "learning_goal": "Decide from a distance-time graph whether a motion is uniform and justify it from the straightness of the line.",
+              "misconceptions": [
+                "Any rising line is called uniform, even where it visibly bends.",
+                "A resting phase is read as the object moving backwards."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "forces-basics",
+          "label": "Forces",
+          "subtopics": [
+            {
+              "id": "force-arrows",
+              "label": "Forces as arrows",
+              "default_method": "visual_linking",
+              "learning_goal": "Represent a force as an arrow whose direction and length state where it acts and how strongly.",
+              "misconceptions": [
+                "The arrow is drawn from where the force comes from instead of on the body it acts on.",
+                "Arrow length is treated as decoration rather than as the size of the force."
+              ]
+            },
+            {
+              "id": "balanced-forces",
+              "label": "Balanced and unbalanced forces",
+              "default_method": "error_analysis",
+              "learning_goal": "Decide whether the forces on a body balance and predict whether its motion changes.",
+              "misconceptions": [
+                "A moving body is assumed to need a constant force to keep moving.",
+                "Balanced forces are taken to mean the body must be at rest."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "grade": 8,
+      "topics": [
+        {
+          "id": "kinematics",
+          "label": "Velocity and acceleration",
+          "subtopics": [
+            {
+              "id": "velocity-time-graphs",
+              "label": "Reading velocity-time graphs",
+              "default_method": "visual_linking",
+              "learning_goal": "Read acceleration as the steepness of a velocity-time graph and tell speeding up from slowing down.",
+              "misconceptions": [
+                "A velocity-time graph is read as a distance-time graph, so a flat line is taken for standing still.",
+                "A falling line is read as moving backwards instead of slowing down."
+              ]
+            },
+            {
+              "id": "acceleration",
+              "label": "Calculating acceleration",
+              "default_method": "worked_example",
+              "learning_goal": "Calculate acceleration as the change in velocity divided by the time taken, with its unit.",
+              "misconceptions": [
+                "The final velocity is used instead of the change in velocity.",
+                "The unit is written as metres per second, dropping the second division by time."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "energy",
+          "label": "Energy",
+          "subtopics": [
+            {
+              "id": "energy-forms",
+              "label": "Forms of energy and transfers",
+              "default_method": "visual_linking",
+              "learning_goal": "Name the main forms of energy and describe a transfer chain for one everyday process.",
+              "misconceptions": [
+                "Energy is said to be used up rather than transferred to another form.",
+                "Energy is treated as a substance an object contains rather than a quantity that is accounted."
+              ]
+            },
+            {
+              "id": "kinetic-and-potential",
+              "label": "Kinetic and potential energy",
+              "default_method": "worked_example",
+              "learning_goal": "Calculate kinetic and gravitational potential energy for simple cases and compare the results.",
+              "misconceptions": [
+                "Doubling the speed is expected to double the kinetic energy instead of quadrupling it.",
+                "Height is measured from the ground even when the task sets a different reference level."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "grade": 9,
+      "topics": [
+        {
+          "id": "work-and-power",
+          "label": "Work and power",
+          "subtopics": [
+            {
+              "id": "mechanical-work",
+              "label": "Mechanical work",
+              "default_method": "worked_example",
+              "learning_goal": "Calculate mechanical work as force times distance along the direction of the force.",
+              "misconceptions": [
+                "Holding a heavy bag still is counted as doing mechanical work.",
+                "Force and distance are multiplied even when they point in different directions."
+              ]
+            },
+            {
+              "id": "power",
+              "label": "Power",
+              "default_method": "worked_example",
+              "learning_goal": "Calculate power as work divided by time and interpret the watt as one joule per second.",
+              "misconceptions": [
+                "Power and energy are used interchangeably, as household bills often do.",
+                "A larger force is assumed to always mean more power, regardless of speed."
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

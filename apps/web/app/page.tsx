@@ -4,19 +4,19 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { api } from "@/lib/api";
-import type { Assignment, Catalog } from "@/lib/types";
+import type { Assignment, Subject } from "@/lib/types";
 
-/* Two doors, one per user. Each shows what is actually behind it — counts read from
-   the same endpoints the tools themselves use — so the page is a status board rather
-   than a splash screen. A failed call drops its line and leaves the door working. */
+/* Two doors, one per user. Each shows what is actually behind it — subjects and counts
+   read from the same endpoints the tools themselves use — so the page is a status board
+   rather than a splash screen. A failed call drops its line and leaves the door working. */
 export default function HomePage() {
-  const [catalog, setCatalog] = useState<Catalog | null>(null);
+  const [subjects, setSubjects] = useState<Subject[] | null>(null);
   const [assignments, setAssignments] = useState<Assignment[] | null>(null);
 
   useEffect(() => {
     api
-      .catalog()
-      .then(setCatalog)
+      .subjects()
+      .then((body) => setSubjects(body.subjects))
       .catch(() => undefined);
     api
       .assignments()
@@ -24,7 +24,12 @@ export default function HomePage() {
       .catch(() => undefined);
   }, []);
 
-  const topics = catalog?.grades.reduce((total, grade) => total + grade.topics.length, 0) ?? 0;
+  const topics =
+    subjects?.reduce(
+      (total, subject) =>
+        total + subject.catalog.grades.reduce((sum, grade) => sum + grade.topics.length, 0),
+      0,
+    ) ?? 0;
   const assignment = assignments?.[0];
   const coreTasks = assignment?.tasks.filter((task) => task.mode === "core").length ?? 0;
 
@@ -37,9 +42,9 @@ export default function HomePage() {
           <span className="u-label">Teacher</span>
           <span className="door-title">Lessons</span>
           <span className="door-facts">
-            {catalog && (
+            {subjects && subjects.length > 0 && (
               <span className="u-mono">
-                {catalog.grades.length} grades · {topics} topics
+                {subjects.map((subject) => subject.label).join(" · ")} · {topics} topics
               </span>
             )}
             <span className="u-mono">video · 3 recap cards</span>
