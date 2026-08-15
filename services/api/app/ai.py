@@ -11,11 +11,17 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 from .hero import hero_storyboard
 from .models import (
+    Assignment,
+    GeneratedEvaluation,
+    GeneratedFollowUp,
+    GeneratedProbe,
     GeneratedSection,
     GeneratedStoryboard,
     LessonRequest,
     Storyboard,
     StoryboardReview,
+    Submission,
+    TaskMode,
     VisualReview,
 )
 from .settings import Settings
@@ -44,6 +50,7 @@ class AIService:
             model=self.settings.model_name,
             model_provider=self.settings.model_provider,
             api_key=api_key,
+            base_url=self.settings.openai_base_url or None,
         )
 
     def prompt(self, name: str) -> str:
@@ -173,6 +180,91 @@ class AIService:
             content.append({"type": "image_url", "image_url": {"url": f"data:image/png;base64,{encoded}"}})
         reviewer = self.model.with_structured_output(VisualReview, method="json_schema")
         return reviewer.invoke([HumanMessage(content=content)])
+
+    def probe_question(self, assignment: Assignment, submission: Submission) -> GeneratedProbe:
+        if not self.settings.model_is_configured:
+            raise ModelNotConfigured("Asking the follow-up question requires a configured model.")
+        context = {
+            "assignment_title": assignment.title,
+            "assignment_brief": assignment.brief,
+            # Only the core tasks. Probing work the assignment allowed to be delegated
+            # would tell nobody anything.
+            "core_tasks": [
+                task.description for task in assignment.tasks if task.mode == TaskMode.CORE
+            ],
+            # The student's text is a named key in the human turn, never part of the
+            # system prompt: it is data, and the rules stay out of its reach.
+            "student_response": submission.core_response,
+        }
+        examiner = self.model.with_structured_output(GeneratedProbe, method="json_schema")
+        return examiner.invoke(
+            [
+                SystemMessage(
+                    content="\n\n".join(
+                        [self.prompt("shared_education.md"), self.prompt("probe.md")]
+                    )
+                ),
+                HumanMessage(content=json.dumps(context, ensure_ascii=False)),
+            ]
+        )
+
+    def follow_up_question(
+        self, assignment: Assignment, submission: Submission
+    ) -> GeneratedFollowUp:
+        if not self.settings.model_is_configured:
+            raise ModelNotConfigured("Continuing the conversation requires a configured model.")
+        context = {
+            "assignment_title": assignment.title,
+            "assignment_brief": assignment.brief,
+            "core_tasks": [
+                task.description for task in assignment.tasks if task.mode == TaskMode.CORE
+            ],
+            "student_response": submission.core_response,
+            "conversation": [
+                {"question": exchange.question, "answer": exchange.answer or ""}
+                for exchange in submission.exchanges
+            ],
+        }
+        examiner = self.model.with_structured_output(GeneratedFollowUp, method="json_schema")
+        return examiner.invoke(
+            [
+                SystemMessage(
+                    content="\n\n".join(
+                        [self.prompt("shared_education.md"), self.prompt("follow_up.md")]
+                    )
+                ),
+                HumanMessage(content=json.dumps(context, ensure_ascii=False)),
+            ]
+        )
+
+    def evaluate_submission(
+        self, assignment: Assignment, submission: Submission
+    ) -> GeneratedEvaluation:
+        if not self.settings.model_is_configured:
+            raise ModelNotConfigured("Marking a submission requires a configured model.")
+        context = {
+            "assignment_title": assignment.title,
+            "assignment_brief": assignment.brief,
+            "core_tasks": [
+                task.description for task in assignment.tasks if task.mode == TaskMode.CORE
+            ],
+            "student_response": submission.core_response,
+            "conversation": [
+                {"question": exchange.question, "answer": exchange.answer or ""}
+                for exchange in submission.exchanges
+            ],
+        }
+        marker = self.model.with_structured_output(GeneratedEvaluation, method="json_schema")
+        return marker.invoke(
+            [
+                SystemMessage(
+                    content="\n\n".join(
+                        [self.prompt("shared_education.md"), self.prompt("evaluation.md")]
+                    )
+                ),
+                HumanMessage(content=json.dumps(context, ensure_ascii=False)),
+            ]
+        )
 
     @staticmethod
     def _plain_text(content: Any) -> str:

@@ -1,4 +1,4 @@
-import type { Catalog, LessonRequest, RenderJob, Storyboard } from "./types";
+import type { Assignment, Catalog, LessonRequest, RenderJob, Storyboard, Submission } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -39,4 +39,20 @@ export const api = {
     request<RenderJob>(`/api/storyboards/${storyboardId}/approve`, { method: "POST" }),
   job: (jobId: string) => request<RenderJob>(`/api/jobs/${jobId}`),
   artifactUrl: (path: string) => `${API_URL}${path}`,
+  assignments: () => request<{ assignments: Assignment[] }>("/api/assignments"),
+  submit: (assignmentId: string, coreResponse: string) =>
+    request<Submission>(`/api/assignments/${assignmentId}/submissions`, {
+      method: "POST",
+      body: JSON.stringify({ core_response: coreResponse }),
+    }),
+  probe: (submissionId: string) =>
+    request<Submission>(`/api/submissions/${submissionId}/probe`, { method: "POST" }),
+  answerProbe: (submissionId: string, answer: string) =>
+    request<Submission>(`/api/submissions/${submissionId}/answer`, {
+      method: "POST",
+      body: JSON.stringify({ answer }),
+    }),
+  probeAudioUrl: (submissionId: string, index: number) =>
+    `${API_URL}/api/submissions/${submissionId}/probe/audio/${index}`,
+  thinkingAudioUrl: (variant: number) => `${API_URL}/api/voice/thinking/${variant}`,
 };

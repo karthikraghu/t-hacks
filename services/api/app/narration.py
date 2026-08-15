@@ -78,6 +78,39 @@ class ElevenLabsNarration:
             srt=self._to_srt(aligned_text, starts, ends),
         )
 
+    def speak(self, text: str, voice_id: str | None = None) -> bytes:
+        """Plain text-to-speech for short conversational lines, such as a probe question.
+
+        Unlike `create` this needs no timestamps, so it uses the direct endpoint that
+        returns raw MP3 bytes. The lower stability and raised style push the read
+        towards a live, expectant intonation — a question should sound like one.
+        """
+        if not self.settings.elevenlabs_is_configured:
+            raise NarrationFailure("The ElevenLabs API key and voice ID must be configured.")
+        voice = voice_id or self.settings.elevenlabs_voice_id
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice}"
+        try:
+            response = httpx.post(
+                url,
+                headers={"xi-api-key": self.settings.elevenlabs_api_key, "Content-Type": "application/json"},
+                json={
+                    "text": text,
+                    "model_id": self.settings.elevenlabs_model_id,
+                    "output_format": "mp3_44100_128",
+                    "voice_settings": {
+                        "stability": 0.4,
+                        "similarity_boost": 0.8,
+                        "style": 0.45,
+                    },
+                },
+                timeout=60,
+            )
+            response.raise_for_status()
+        except httpx.HTTPError as error:
+            detail = error.response.text[:800] if isinstance(error, httpx.HTTPStatusError) else str(error)
+            raise NarrationFailure(f"The ElevenLabs request failed: {detail}") from error
+        return response.content
+
     @staticmethod
     def _joined_text(sections: list[StoryboardSection]) -> tuple[str, list[tuple[int, int]]]:
         parts: list[str] = []

@@ -11,15 +11,23 @@ from .catalog import Catalog
 from .models import (
     JobStatus,
     LessonRequest,
+    ProbeAnswerRequest,
     RenderJob,
     SectionRevisionRequest,
     Storyboard,
     StoryboardSection,
     StoryboardState,
+    Submission,
+    SubmissionEvaluation,
+    SubmissionExchange,
+    SubmissionRequest,
+    SubmissionState,
 )
 from .narration import ElevenLabsNarration
 from .pipeline import GenerationPipeline
+from .probe import check_grounding
 from .rendering import LocalRenderer
+from .seed_assignment import SEED_ASSIGNMENT_ID, seed_assignment
 from .settings import get_settings
 from .storage import Storage
 
@@ -30,6 +38,15 @@ ai = AIService(settings)
 narration = ElevenLabsNarration(settings)
 renderer = LocalRenderer(settings)
 pipeline = GenerationPipeline(settings, storage, catalog, ai, narration, renderer)
+
+# The worked example is written once at import, so the assignment list is never empty
+# on a fresh machine and the feature demonstrates with no API key configured. Import
+# already touches the filesystem here (Catalog parses its JSON, Storage mkdirs), so a
+# write is consistent — but it must never raise, or the app becomes unimportable.
+try:
+    storage.load_assignment(SEED_ASSIGNMENT_ID)
+except FileNotFoundError:
+    storage.save_assignment(seed_assignment())
 
 app = FastAPI(title="Klarblick API", version="0.1.0")
 app.add_middleware(
@@ -170,4 +187,187 @@ def get_artifact(job_id: str, artifact_name: str) -> FileResponse:
         raise HTTPException(status_code=404, detail="The artifact file is missing.")
     media_type = "video/mp4" if artifact_name.endswith(".mp4") else "image/png"
     return FileResponse(path, media_type=media_type, filename=artifact_name)
+
+
+@app.get("/api/assignments")
+def list_assignments() -> dict[str, object]:
+    return {"assignments": [assignment.model_dump() for assignment in storage.list_assignments()]}
+
+
+@app.post("/api/assignments/{assignment_id}/submissions", response_model=Submission)
+def create_submission(assignment_id: str, request: SubmissionRequest) -> Submission:
+    try:
+        storage.load_assignment(assignment_id)
+    except FileNotFoundError as error:
+        raise HTTPException(status_code=404, detail="Assignment not found.") from error
+
+    # Checked here rather than as a Field constraint: pydantic body validation returns
+    # FastAPI's own 422 shape, which the frontend renders as an object-ish string
+    # instead of this sentence.
+    if len(request.core_response) < 40:
+        raise HTTPException(
+            status_code=422,
+            detail="Write a little more before submitting, so the work can be marked fairly.",
+        )
+
+    submission = Submission(
+        id=uuid4().hex,
+        assignment_id=assignment_id,
+        state=SubmissionState.SUBMITTED,
+        core_response=request.core_response,
+    )
+    storage.save_submission(submission)
+    return submission
+
+
+@app.post("/api/submissions/{submission_id}/probe", response_model=Submission)
+def probe_submission(submission_id: str) -> Submission:
+    try:
+        submission = storage.load_submission(submission_id)
+    except FileNotFoundError as error:
+        raise HTTPException(status_code=404, detail="Submission not found.") from error
+    # One question per submission, structurally: a second call cannot reach the model.
+    if submission.state != SubmissionState.SUBMITTED:
+        raise HTTPException(
+            status_code=409, detail="This submission already has its question."
+        )
+    try:
+        assignment = storage.load_assignment(submission.assignment_id)
+    except FileNotFoundError as error:
+        raise HTTPException(status_code=404, detail="Assignment not found.") from error
+
+    try:
+        generated = ai.probe_question(assignment, submission)
+    except Exception as error:
+        # ModelNotConfigured, provider auth failures, network errors — every way the
+        # model call can fail reads as one 422 sentence, never a bare 500. Verified
+        # against a real 401: openai.AuthenticationError is not a RuntimeError.
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+    # The free deterministic gate, run before anything is persisted: a question the
+    # student's own words do not support is not asked at all.
+    grounding = check_grounding(generated.quoted_span, submission.core_response)
+    if not grounding.grounded:
+        raise HTTPException(status_code=422, detail="; ".join(grounding.issues))
+
+    submission.exchanges = [
+        SubmissionExchange(question=generated.question, quoted_span=generated.quoted_span)
+    ]
+    submission.state = SubmissionState.PROBED
+    storage.save_submission(submission)
+    return submission
+
+
+@app.post("/api/submissions/{submission_id}/answer", response_model=Submission)
+def answer_probe(submission_id: str, request: ProbeAnswerRequest) -> Submission:
+    try:
+        submission = storage.load_submission(submission_id)
+    except FileNotFoundError as error:
+        raise HTTPException(status_code=404, detail="Submission not found.") from error
+    # ANSWERED is legal here as well as PROBED: answers are saved before any model is
+    # asked, so a failed follow-up or marking call can simply be retried. Accepting
+    # only PROBED would 409 every retry and strand the student with no mark.
+    if submission.state not in (SubmissionState.PROBED, SubmissionState.ANSWERED):
+        raise HTTPException(
+            status_code=409,
+            detail="This submission is not waiting for an answer to its question.",
+        )
+    try:
+        assignment = storage.load_assignment(submission.assignment_id)
+    except FileNotFoundError as error:
+        raise HTTPException(status_code=404, detail="Assignment not found.") from error
+
+    if submission.state == SubmissionState.PROBED:
+        # Recorded before any model is asked, so a failure never costs the student
+        # their words. On a retry after a failed follow-up call the open question is
+        # already answered, and the recording step is skipped rather than overwritten.
+        if submission.exchanges[-1].answer is None:
+            submission.exchanges[-1].answer = request.answer
+            storage.save_submission(submission)
+
+        # The hard cap is structural: once the limit is reached the model is never
+        # even asked whether it wants another question.
+        if len(submission.exchanges) < settings.assignment_question_limit:
+            try:
+                follow = ai.follow_up_question(assignment, submission)
+            except Exception as error:
+                raise HTTPException(status_code=422, detail=str(error)) from error
+            if not follow.done and follow.question.strip():
+                submission.exchanges.append(
+                    SubmissionExchange(question=follow.question.strip())
+                )
+                storage.save_submission(submission)
+                return submission
+
+        submission.state = SubmissionState.ANSWERED
+        storage.save_submission(submission)
+
+    try:
+        generated = ai.evaluate_submission(assignment, submission)
+    except Exception as error:
+        # Same mapping as the probe route: any model-call failure is a 422 sentence.
+        # The answers were already saved above, so the student can simply retry.
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+    # The weighting is arithmetic here, not a number the model chose: how much the
+    # answer counts is a teaching decision and belongs in settings.
+    weight = settings.assignment_probe_weight
+    submission.evaluation = SubmissionEvaluation(
+        core_score=generated.core_score,
+        probe_score=generated.probe_score,
+        weighted_score=round(
+            generated.core_score * (1 - weight) + generated.probe_score * weight, 1
+        ),
+        probe_weight=weight,
+        strengths=generated.strengths,
+        gaps=generated.gaps,
+        comment=generated.comment,
+    )
+    submission.state = SubmissionState.EVALUATED
+    storage.save_submission(submission)
+    return submission
+
+
+@app.get("/api/submissions/{submission_id}/probe/audio/{index}")
+def get_probe_audio(submission_id: str, index: int) -> FileResponse:
+    try:
+        submission = storage.load_submission(submission_id)
+    except FileNotFoundError as error:
+        raise HTTPException(status_code=404, detail="Submission not found.") from error
+    if index < 0 or index >= len(submission.exchanges):
+        raise HTTPException(status_code=404, detail="This question does not exist yet.")
+
+    path = storage.probe_audio_path(submission_id, index)
+    if not path.exists():
+        try:
+            audio = narration.speak(
+                submission.exchanges[index].question,
+                voice_id=settings.probe_voice_id or None,
+            )
+        except Exception as error:
+            # NarrationFailure, network errors — the frontend falls back to the
+            # written question, so this only ever costs the voice, never the flow.
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        storage.save_probe_audio(submission_id, index, audio)
+    return FileResponse(path, media_type="audio/mpeg", filename="question.mp3")
+
+
+#: Short spoken fillers played while the next question or the mark is decided.
+#: The trailing full stops keep the reads short and falling, like real muttering.
+THINKING_LINES = ["Hmm, let me think.", "Mm, right.", "Okay, let me see."]
+
+
+@app.get("/api/voice/thinking/{variant}")
+def get_thinking_audio(variant: int) -> FileResponse:
+    if variant < 0 or variant >= len(THINKING_LINES):
+        raise HTTPException(status_code=404, detail="This thinking sound does not exist.")
+    voice = settings.probe_voice_id or settings.elevenlabs_voice_id
+    path = storage.thinking_audio_path(variant, voice)
+    if not path.exists():
+        try:
+            audio = narration.speak(THINKING_LINES[variant], voice_id=voice)
+        except Exception as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        storage.save_thinking_audio(variant, voice, audio)
+    return FileResponse(path, media_type="audio/mpeg", filename="thinking.mp3")
 

@@ -207,6 +207,9 @@ export default function HomePage() {
             </span>
           </a>
           <StepRail current={stepOrder.indexOf(step)} />
+          <a className="btn btn-quiet btn-small" href="/assignments">
+            Assignments
+          </a>
         </div>
       </header>
 
