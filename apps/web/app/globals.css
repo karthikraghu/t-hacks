@@ -3,33 +3,58 @@
 @tailwind utilities;
 
 /* ------------------------------------------------------------------ *
- * Tokens
- * A teacher's exercise book: blue-black ink on ruled paper, one red pen
- * reserved for the teacher's own marks, one marker for "you are here".
+ * Tokens — "telli" direction: violet accent on white, editorial ruled
+ * pages. One accent (violet). Ink is a deep indigo. Hairlines carry the
+ * structure; red is reserved for error states only.
  * ------------------------------------------------------------------ */
 :root {
-  --ink: #101a26;
-  --ink-2: #4a5a6b;
-  --ink-3: #7d8b99;
-  --paper: #f3f5f7;
-  --card: #ffffff;
-  --rule: #d8e0e7;
-  --rule-soft: #e7ecf1;
-  --pen: #1f4c8c;
-  --pen-dark: #14345f;
-  --pen-wash: #eaf0f8;
-  --red: #b5372a;
-  --red-wash: #fbeeec;
-  --marker: #ffdd57;
-  --grid: rgba(31, 76, 140, 0.11);
-  --grid-strong: rgba(31, 76, 140, 0.22);
+  --ink: #1d1a3f;
+  --ink-soft: #3c3956;
+  --ink-55: rgba(29, 26, 63, 0.55);
+  --ink-45: rgba(29, 26, 63, 0.45);
+  --ink-30: rgba(29, 26, 63, 0.3);
 
-  --lift: 0 1px 2px rgba(16, 26, 38, 0.05);
-  --lift-2: 0 6px 20px rgba(16, 26, 38, 0.07);
+  --violet: #7b6fe0;
+  --violet-dark: #5e52c7;
+  --violet-300: #b4acee;
+  --violet-200: #d8d3f6;
+  --violet-100: #edeafa;
+  --lavender: #f4f1fb;
+
+  --hairline: rgba(29, 26, 63, 0.12);
+  --border: rgba(29, 26, 63, 0.2);
+
+  --bg: #ffffff;
+  --bg-wash: linear-gradient(165deg, #fff 20%, #f4f1fb 60%, #f7eff7 100%);
+
+  --err: #c0392b;
+  --err-wash: #fdece9;
+  --err-border: #eec7c1;
+
+  /* Aliases so the existing class rules and components keep resolving. */
+  --ink-2: var(--ink-soft);
+  --ink-3: var(--ink-55);
+  --paper: var(--bg);
+  --card: var(--bg);
+  --rule: var(--hairline);
+  --rule-soft: rgba(29, 26, 63, 0.08);
+  --pen: var(--violet);
+  --pen-dark: var(--violet-dark);
+  --pen-wash: var(--lavender);
+  --marker: var(--violet);
+  --red: var(--err);
+  --red-wash: var(--err-wash);
+
+  --lift: 0 1px 2px rgba(29, 26, 63, 0.05);
+  --lift-2: 0 8px 28px rgba(29, 26, 63, 0.07);
 
   --shell: min(1120px, calc(100% - 40px));
   --radius: 10px;
-  --radius-s: 8px;
+  --radius-s: 6px;
+
+  --font-caps: var(--font-sans), "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --font-title: var(--font-serif), "PT Serif", Georgia, serif;
+  --font-text: var(--font-body), "Roboto", ui-sans-serif, system-ui, sans-serif;
 }
 
 * {
@@ -42,11 +67,11 @@ html {
 
 body {
   margin: 0;
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--font-sans), ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--ink-soft);
+  font-family: var(--font-text);
   font-size: 15px;
-  line-height: 1.6;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -59,7 +84,7 @@ textarea {
 }
 
 :focus-visible {
-  outline: 2px solid var(--pen);
+  outline: 2px solid var(--violet);
   outline-offset: 2px;
 }
 
@@ -68,55 +93,69 @@ textarea {
  * ------------------------------------------------------------------ */
 .u-display {
   margin: 0;
-  font-weight: 640;
-  font-variation-settings: "wdth" 112;
-  letter-spacing: -0.028em;
-  line-height: 1.08;
-  font-size: clamp(28px, 3.2vw, 40px);
+  font-family: var(--font-title);
+  font-weight: 400;
+  color: var(--violet);
+  letter-spacing: -0.005em;
+  line-height: 1.1;
+  font-size: clamp(28px, 3.4vw, 42px);
 }
 
 .u-h2 {
   margin: 0;
-  font-weight: 620;
-  font-variation-settings: "wdth" 106;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-  font-size: 21px;
+  font-family: var(--font-title);
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1.25;
+  font-size: 20px;
 }
 
 .u-h3 {
   margin: 0;
-  font-weight: 600;
-  letter-spacing: -0.012em;
-  line-height: 1.3;
+  font-family: var(--font-title);
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.35;
   font-size: 17px;
 }
 
+/* Small caps label ("On screen", legends). */
 .u-label {
   display: block;
   margin: 0;
-  font-family: var(--font-mono), ui-monospace, monospace;
+  font-family: var(--font-caps);
   font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.11em;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ink-3);
+  color: var(--ink-55);
+}
+
+/* Lowercase one-word kicker above each page H1. */
+.kicker {
+  display: block;
+  margin: 0 0 8px;
+  font-family: var(--font-text);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--ink-45);
 }
 
 .u-mono {
-  font-family: var(--font-mono), ui-monospace, monospace;
+  font-family: var(--font-caps);
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 
 .u-muted {
-  color: var(--ink-2);
+  color: var(--ink-55);
 }
 
 .u-note {
   margin: 0;
   font-size: 13px;
-  line-height: 1.55;
-  color: var(--ink-2);
+  line-height: 1.6;
+  color: var(--ink-55);
 }
 
 .u-spaced {
@@ -132,7 +171,7 @@ textarea {
 }
 
 /* ------------------------------------------------------------------ *
- * Shell and header
+ * Shell and top nav
  * ------------------------------------------------------------------ */
 .shell {
   min-height: 100vh;
@@ -144,15 +183,15 @@ textarea {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(243, 245, 247, 0.88);
+  background: rgba(255, 255, 255, 0.86);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--hairline);
 }
 
 .header-inner {
   width: var(--shell);
   margin-inline: auto;
-  min-height: 62px;
+  min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -162,96 +201,151 @@ textarea {
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
   color: var(--ink);
   text-decoration: none;
   flex: none;
 }
 
 .brand-mark {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 7px;
-  background: var(--pen);
-  background-image: linear-gradient(var(--grid-strong) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px);
-  background-size: 7.5px 7.5px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  background: linear-gradient(150deg, var(--violet) 0%, var(--violet-dark) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
 }
 
 .brand-name {
-  font-weight: 640;
-  font-variation-settings: "wdth" 108;
-  letter-spacing: -0.02em;
-  font-size: 16px;
+  font-family: var(--font-caps);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 /* ------------------------------------------------------------------ *
- * Front page — two doors, one per user. No shell width: the split runs
- * the full window so the choice is the whole screen and nothing else is.
+ * Home — bold caps hero, two door cards, on the gradient wash.
  * ------------------------------------------------------------------ */
 .doors {
   flex: 1;
+  background: var(--bg-wash);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  padding: 64px clamp(24px, 5vw, 76px) 88px;
+}
+
+.hero {
+  text-align: center;
+  max-width: 760px;
+}
+
+.hero-intro {
+  font-family: var(--font-title);
+  font-style: italic;
+  font-size: clamp(18px, 2.4vw, 24px);
+  color: var(--ink-55);
+  margin: 0 0 6px;
+}
+
+.hero-line-1 {
+  display: block;
+  font-family: var(--font-caps);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  line-height: 0.95;
+  font-size: clamp(48px, 9vw, 88px);
+  color: var(--ink);
+}
+
+.hero-line-2 {
+  display: block;
+  font-family: var(--font-caps);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.005em;
+  line-height: 1;
+  font-size: clamp(28px, 5.4vw, 52px);
+  color: var(--violet);
+}
+
+.hero-sub {
+  font-family: var(--font-title);
+  font-size: clamp(15px, 2vw, 18px);
+  color: var(--ink-55);
+  margin: 18px auto 0;
+  max-width: 46ch;
+}
+
+.door-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 340px));
+  gap: 20px;
+  width: 100%;
+  max-width: 720px;
 }
 
 .door {
   display: grid;
-  align-content: center;
-  gap: 12px;
-  padding: 56px clamp(24px, 5vw, 76px);
+  align-content: start;
+  gap: 10px;
+  padding: 26px 26px 24px;
+  background: var(--bg);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  box-shadow: var(--lift-2);
   color: var(--ink);
   text-decoration: none;
-  border-right: 1px solid var(--rule);
-  transition: background-color 0.16s ease;
-}
-
-.door:last-child {
-  border-right: 0;
-}
-
-/* Ruled paper for the teacher, plain card for the student — the same distinction
-   the rest of the app draws between planning a lesson and doing the work. */
-.door-teacher {
-  background-color: var(--card);
-  background-image: linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 26px 26px;
-}
-
-.door-student {
-  background-color: var(--card);
+  transition: border-color 0.16s ease, transform 0.16s ease;
 }
 
 .door:hover {
-  background-color: var(--pen-wash);
+  border-color: var(--violet-300);
+  transform: translateY(-2px);
+}
+
+.door .u-label {
+  color: var(--violet);
+}
+
+.door-student .u-label {
+  color: var(--ink);
 }
 
 .door-title {
-  font-weight: 640;
-  font-variation-settings: "wdth" 112;
-  letter-spacing: -0.03em;
-  line-height: 1.04;
-  font-size: clamp(34px, 5vw, 56px);
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.1;
+  color: var(--ink);
 }
 
-/* Reserved whether or not the counts have arrived, so the doors never jump. */
 .door-facts {
   display: grid;
   gap: 2px;
-  min-height: 42px;
-  color: var(--ink-2);
-  font-size: 13px;
+  min-height: 40px;
+  color: var(--ink-55);
+  font-size: 13.5px;
 }
 
 .door-go {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-top: 8px;
-  color: var(--pen);
-  font-weight: 560;
+  margin-top: 10px;
+  font-family: var(--font-caps);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--violet);
+}
+
+.door-student .door-go {
+  color: var(--ink);
 }
 
 .door-go span {
@@ -262,11 +356,13 @@ textarea {
   transform: translateX(3px);
 }
 
-/* Step rail — progress, not navigation: the API cannot reopen an approved script. */
+/* ------------------------------------------------------------------ *
+ * Step rail — progress, not navigation.
+ * ------------------------------------------------------------------ */
 .rail {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   min-width: 0;
 }
 
@@ -274,53 +370,52 @@ textarea {
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 5px 10px;
-  border-radius: 999px;
-  font-size: 13px;
-  color: var(--ink-3);
+  padding: 4px 6px;
+  font-family: var(--font-text);
+  font-size: 14px;
+  color: var(--ink-55);
   white-space: nowrap;
 }
 
 .rail-step .rail-dot {
-  width: 19px;
-  height: 19px;
+  width: 20px;
+  height: 20px;
   flex: none;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  border: 1px solid var(--rule);
-  background: var(--card);
-  font-family: var(--font-mono), ui-monospace, monospace;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-family: var(--font-caps);
   font-size: 10px;
-  color: var(--ink-3);
+  color: var(--ink-55);
 }
 
 .rail-step.is-done {
-  color: var(--ink-2);
+  color: var(--ink-55);
 }
 
 .rail-step.is-done .rail-dot {
-  background: var(--pen);
-  border-color: var(--pen);
+  background: var(--violet);
+  border-color: var(--violet);
   color: #fff;
 }
 
 .rail-step.is-current {
-  color: var(--ink);
-  font-weight: 560;
-  background: var(--marker);
+  color: var(--violet);
+  font-weight: 700;
 }
 
 .rail-step.is-current .rail-dot {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--marker);
+  background: var(--violet);
+  border-color: var(--violet);
+  color: #fff;
 }
 
 .rail-sep {
-  width: 12px;
+  width: 14px;
   height: 1px;
-  background: var(--rule);
+  background: var(--hairline);
   flex: none;
 }
 
@@ -331,7 +426,7 @@ textarea {
   width: var(--shell);
   margin-inline: auto;
   flex: 1;
-  padding-block: 32px 96px;
+  padding-block: 36px 96px;
 }
 
 .page-head {
@@ -340,7 +435,7 @@ textarea {
   justify-content: space-between;
   gap: 24px;
   flex-wrap: wrap;
-  margin-bottom: 26px;
+  margin-bottom: 28px;
 }
 
 .page-head-meta {
@@ -351,19 +446,19 @@ textarea {
 }
 
 .card {
-  border: 1px solid var(--rule);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius);
-  background: var(--card);
+  background: var(--bg);
   box-shadow: var(--lift);
 }
 
 .stack {
   display: grid;
-  gap: 22px;
+  gap: 24px;
 }
 
 /* ------------------------------------------------------------------ *
- * Buttons
+ * Buttons — violet fill primary, caps verbs.
  * ------------------------------------------------------------------ */
 .btn {
   display: inline-flex;
@@ -372,58 +467,62 @@ textarea {
   gap: 8px;
   border: 1px solid transparent;
   border-radius: var(--radius-s);
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: 560;
+  padding: 13px 24px;
+  font-family: var(--font-caps);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   text-decoration: none;
   cursor: pointer;
   transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
 }
 
 .btn-primary {
-  background: var(--pen);
+  background: var(--violet);
   color: #fff;
 }
 
 .btn-primary:hover {
-  background: var(--pen-dark);
+  background: var(--violet-dark);
 }
 
 .btn-quiet {
-  background: var(--card);
-  border-color: var(--rule);
-  color: var(--ink);
+  background: var(--bg);
+  border-color: var(--violet);
+  color: var(--violet);
 }
 
 .btn-quiet:hover {
-  border-color: var(--ink-3);
+  background: var(--lavender);
 }
 
 .btn-plain {
   background: transparent;
-  color: var(--ink-2);
-  padding-inline: 10px;
+  color: var(--ink-55);
+  padding-inline: 12px;
 }
 
 .btn-plain:hover {
   color: var(--ink);
 }
 
+/* Ink variant — the teacher's "mark for rewrite" and STOP. */
 .btn-mark {
-  background: var(--red-wash);
-  color: var(--red);
-  border-color: #f0d3ce;
-  padding: 7px 12px;
-  font-size: 13px;
+  background: var(--bg);
+  color: var(--ink);
+  border-color: var(--border);
+  padding: 9px 14px;
+  font-size: 11.5px;
 }
 
 .btn-mark:hover {
-  background: #f7e2df;
+  background: var(--lavender);
 }
 
 .btn-small {
-  padding: 7px 12px;
-  font-size: 13px;
+  padding: 9px 14px;
+  font-size: 11.5px;
 }
 
 .btn:disabled {
@@ -432,60 +531,62 @@ textarea {
 }
 
 /* ------------------------------------------------------------------ *
- * Tags
+ * Tags — caps, solid violet or outlined violet.
  * ------------------------------------------------------------------ */
 .tag {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 4px 9px;
-  border: 1px solid var(--rule);
-  border-radius: 999px;
-  background: var(--card);
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  color: var(--ink-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: var(--bg);
+  font-family: var(--font-caps);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-55);
   white-space: nowrap;
 }
 
 .tag-pen {
-  border-color: #c9d8ec;
-  background: var(--pen-wash);
-  color: var(--pen-dark);
+  border-color: var(--violet);
+  background: var(--bg);
+  color: var(--violet);
 }
 
 .tag-marker {
-  border-color: #e8c534;
-  background: var(--marker);
-  color: #4a3900;
+  border-color: transparent;
+  background: var(--violet);
+  color: #fff;
 }
 
 /* ------------------------------------------------------------------ *
- * Alerts
+ * Alerts — info in lavender, error is the one reserved red.
  * ------------------------------------------------------------------ */
 .alert {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 12px 14px;
+  padding: 13px 16px;
   border-radius: var(--radius-s);
   border: 1px solid;
   font-size: 14px;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
 .alert-error {
-  border-color: #e8c3bd;
-  background: var(--red-wash);
-  color: #85281e;
+  border-color: var(--err-border);
+  background: var(--err-wash);
+  color: #8a2a20;
 }
 
 .alert-info {
-  border-color: #e8c534;
-  background: #fff8dd;
-  color: #4a3900;
+  border-color: var(--violet-200);
+  background: var(--lavender);
+  color: var(--ink);
 }
 
 .alert p {
@@ -493,15 +594,15 @@ textarea {
 }
 
 .alert strong {
-  font-weight: 600;
+  font-weight: 700;
 }
 
 /* ------------------------------------------------------------------ *
- * Setup step
+ * Setup — ruled form. Hairlines separate rows; no boxed sections.
  * ------------------------------------------------------------------ */
 .section {
-  padding: 24px 26px;
-  border-bottom: 1px solid var(--rule-soft);
+  padding: 22px 26px;
+  border-bottom: 1px solid var(--hairline);
 }
 
 .section:last-child {
@@ -521,7 +622,6 @@ textarea {
   margin-bottom: 13px;
 }
 
-/* The float above takes the legend out of flow; restore it for the fields. */
 .section-set legend + * {
   clear: both;
 }
@@ -535,7 +635,7 @@ textarea {
 .choice-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .choice-grid-3 {
@@ -558,84 +658,90 @@ textarea {
   pointer-events: none;
 }
 
+/* Choice chip (radio behaviour). */
 .choice-pill {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 8px 14px;
-  border: 1px solid var(--rule);
-  border-radius: 999px;
-  background: var(--card);
-  font-size: 14px;
-  color: var(--ink-2);
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: var(--bg);
+  font-size: 13.5px;
+  color: var(--ink-soft);
   transition: border-color 0.14s ease, background 0.14s ease, color 0.14s ease;
 }
 
 .choice:hover .choice-pill {
-  border-color: var(--ink-3);
-  color: var(--ink);
+  background: var(--lavender);
 }
 
 .choice input:checked + .choice-pill {
-  border-color: var(--pen);
-  background: var(--pen);
+  border-color: var(--violet);
+  background: var(--violet);
   color: #fff;
+  font-weight: 700;
 }
 
 .choice-pill-block {
   display: flex;
   width: 100%;
-  border-radius: var(--radius-s);
   text-align: left;
 }
 
 .choice input:focus-visible + .choice-pill,
 .choice input:focus-visible + .choice-box {
-  outline: 2px solid var(--pen);
+  outline: 2px solid var(--violet);
   outline-offset: 2px;
 }
 
+/* Focus card (subtopic pick). */
 .choice-box {
   display: block;
   height: 100%;
-  padding: 14px 15px;
-  border: 1px solid var(--rule);
+  padding: 15px 16px;
+  border: 1px solid var(--hairline);
   border-radius: var(--radius-s);
-  background: var(--card);
-  transition: border-color 0.14s ease, box-shadow 0.14s ease;
+  background: var(--bg);
+  transition: border-color 0.14s ease, background 0.14s ease;
 }
 
 .choice:hover .choice-box {
-  border-color: var(--ink-3);
+  border-color: var(--violet-300);
 }
 
 .choice input:checked + .choice-box {
-  border-color: var(--pen);
-  box-shadow: inset 3px 0 0 var(--pen);
+  border: 2px solid var(--violet);
+  background: var(--lavender);
+  padding: 14px 15px;
 }
 
 .choice-box-title {
   display: block;
-  font-size: 15px;
-  font-weight: 560;
-  line-height: 1.35;
+  font-family: var(--font-title);
+  font-size: 18px;
+  line-height: 1.3;
   color: var(--ink);
+}
+
+.choice input:checked + .choice-box .choice-box-title {
+  color: var(--violet);
 }
 
 .choice-box-goal {
   display: block;
   margin-top: 7px;
-  font-size: 13px;
+  font-size: 12.5px;
   line-height: 1.5;
-  color: var(--ink-2);
+  color: var(--ink-55);
 }
 
 .choice-box-slips {
   display: block;
   margin-top: 11px;
   padding: 9px 11px;
-  border-radius: 6px;
-  background: var(--paper);
+  border-radius: var(--radius-s);
+  background: var(--lavender);
 }
 
 .slip {
@@ -644,7 +750,7 @@ textarea {
   margin-top: 4px;
   font-size: 12px;
   line-height: 1.45;
-  color: var(--ink-2);
+  color: var(--ink-55);
 }
 
 .field {
@@ -654,19 +760,19 @@ textarea {
 .field textarea {
   width: 100%;
   margin-top: 8px;
-  padding: 11px 13px;
-  border: 1px solid var(--rule);
+  padding: 12px 14px;
+  border: 1px solid var(--border);
   border-radius: var(--radius-s);
-  background: var(--card);
+  background: var(--bg);
   line-height: 1.55;
   resize: vertical;
-  transition: border-color 0.14s ease;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease;
 }
 
 .field textarea:focus {
-  border-color: var(--pen);
+  border-color: var(--violet);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(31, 76, 140, 0.12);
+  box-shadow: 0 0 0 3px rgba(123, 111, 224, 0.16);
 }
 
 .setup-foot {
@@ -676,8 +782,8 @@ textarea {
   gap: 20px;
   flex-wrap: wrap;
   padding: 18px 26px;
-  border-top: 1px solid var(--rule);
-  background: var(--paper);
+  border-top: 1px solid var(--hairline);
+  background: var(--lavender);
   border-radius: 0 0 var(--radius) var(--radius);
 }
 
@@ -689,8 +795,8 @@ textarea {
 .skeleton {
   height: 34px;
   width: 62px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--rule-soft), var(--paper), var(--rule-soft));
+  border-radius: var(--radius-s);
+  background: linear-gradient(90deg, var(--lavender), var(--violet-100), var(--lavender));
   background-size: 220% 100%;
   animation: shimmer 1.3s linear infinite;
 }
@@ -699,7 +805,6 @@ textarea {
   flex: 1;
   width: auto;
   height: 44px;
-  border-radius: var(--radius-s);
 }
 
 @keyframes shimmer {
@@ -709,27 +814,18 @@ textarea {
 }
 
 /* ------------------------------------------------------------------ *
- * The lesson ruler — the signature element.
- * One segment per scene, width proportional to its real duration.
- * The paper grid behind it is the scale: one square = 10 seconds.
+ * Lesson ruler — flat segmented strip, one segment per scene, sized by
+ * its real duration; coloured by position (done ink → current violet →
+ * upcoming violet tints).
  * ------------------------------------------------------------------ */
-.ruler {
-  --grid-step: calc(100% / (var(--secs) / 10));
-}
-
 .ruler-track {
   position: relative;
   display: flex;
-  gap: 2px;
-  height: 54px;
-  padding: 3px;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-s);
-  background-color: var(--card);
-  background-image: linear-gradient(90deg, var(--grid) 1px, transparent 1px),
-    linear-gradient(var(--grid) 1px, transparent 1px);
-  background-size: var(--grid-step) 12px;
-  background-position: 3px 3px;
+  gap: 0;
+  height: 26px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--violet-100);
 }
 
 .ruler-seg {
@@ -738,15 +834,19 @@ textarea {
   display: grid;
   place-items: center;
   border: 0;
-  border-radius: 5px;
+  border-right: 1px solid rgba(255, 255, 255, 0.55);
   padding: 0;
-  background: var(--pen-wash);
-  color: var(--pen-dark);
-  font-family: var(--font-mono), ui-monospace, monospace;
+  background: var(--violet-200);
+  color: var(--violet-dark);
+  font-family: var(--font-caps);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   overflow: hidden;
   transition: background 0.14s ease, color 0.14s ease;
+}
+
+.ruler-seg:last-child {
+  border-right: 0;
 }
 
 button.ruler-seg {
@@ -754,42 +854,38 @@ button.ruler-seg {
 }
 
 button.ruler-seg:hover {
-  background: #d7e3f4;
+  background: var(--violet-300);
 }
 
 .ruler-seg.is-active {
-  background: var(--pen);
+  background: var(--violet);
   color: #fff;
 }
 
 .ruler-ticks {
-  position: relative;
-  height: 6px;
-  margin-top: 3px;
-}
-
-.ruler-tick-mark {
-  position: absolute;
-  top: 0;
-  width: 1px;
-  height: 6px;
-  background: var(--rule);
+  display: none;
 }
 
 .ruler-scale {
   position: relative;
   height: 15px;
-  margin-top: 2px;
+  margin-top: 6px;
 }
 
 .ruler-tick {
   position: absolute;
   top: 0;
   transform: translateX(-50%);
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 10px;
-  color: var(--ink-3);
+  font-family: var(--font-caps);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-45);
   white-space: nowrap;
+}
+
+/* Only the endpoints are labelled in the new strip. */
+.ruler-tick:not(.is-first):not(.is-last) {
+  display: none;
 }
 
 .ruler-tick.is-first {
@@ -801,16 +897,15 @@ button.ruler-seg:hover {
 }
 
 .ruler-working .ruler-seg {
-  background: var(--rule-soft);
-  color: var(--ink-3);
+  background: var(--violet-100);
+  color: var(--violet-300);
 }
 
 .ruler-working .ruler-track::after {
   content: "";
   position: absolute;
-  inset: 3px;
-  border-radius: 5px;
-  background: linear-gradient(90deg, transparent, rgba(31, 76, 140, 0.16), transparent);
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(123, 111, 224, 0.35), transparent);
   background-size: 40% 100%;
   background-repeat: no-repeat;
   animation: sweep 2.4s ease-in-out infinite;
@@ -845,7 +940,7 @@ button.ruler-seg:hover {
 .script-objective {
   margin: 8px 0 0;
   max-width: 68ch;
-  color: var(--ink-2);
+  color: var(--ink-55);
 }
 
 .script-ruler {
@@ -854,35 +949,36 @@ button.ruler-seg:hover {
 
 .scenes {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .scene {
   display: grid;
   grid-template-columns: 78px 1fr;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius);
-  background: var(--card);
+  background: var(--bg);
   box-shadow: var(--lift);
   scroll-margin-top: 96px;
-  transition: border-color 0.18s ease;
+  transition: border-color 0.18s ease, background 0.18s ease;
 }
 
 .scene.is-active {
-  border-color: var(--pen);
+  border: 2px solid var(--violet);
+  background: var(--lavender);
 }
 
 .scene-gutter {
-  padding: 18px 0 18px 16px;
-  border-right: 1px solid var(--rule-soft);
-  font-family: var(--font-mono), ui-monospace, monospace;
+  padding: 18px 0 18px 18px;
+  border-right: 1px solid var(--hairline);
+  font-family: var(--font-caps);
   font-variant-numeric: tabular-nums;
 }
 
 .scene-index {
-  font-size: 19px;
-  font-weight: 500;
-  color: var(--pen);
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--violet);
   line-height: 1;
 }
 
@@ -890,7 +986,8 @@ button.ruler-seg:hover {
   display: block;
   margin-top: 6px;
   font-size: 11px;
-  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  color: var(--ink-45);
 }
 
 .scene-body {
@@ -910,16 +1007,16 @@ button.ruler-seg:hover {
   max-width: 62ch;
   font-size: 13px;
   line-height: 1.5;
-  color: var(--ink-3);
+  color: var(--ink-55);
 }
 
 .scene-narration {
   margin: 12px 0 0;
-  font-size: 16px;
-  line-height: 1.62;
-  color: var(--ink);
-  border-left: 2px solid var(--rule);
-  padding-left: 13px;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  border-left: 2px solid var(--violet-200);
+  padding-left: 14px;
 }
 
 .scene-detail {
@@ -935,7 +1032,7 @@ button.ruler-seg:hover {
   align-items: start;
   font-size: 13px;
   line-height: 1.55;
-  color: var(--ink-2);
+  color: var(--ink-55);
 }
 
 .scene-detail-row p {
@@ -951,24 +1048,24 @@ button.ruler-seg:hover {
 .chip-code {
   padding: 3px 8px;
   border-radius: 5px;
-  background: var(--pen-wash);
-  color: var(--pen-dark);
-  font-family: var(--font-mono), ui-monospace, monospace;
+  background: var(--lavender);
+  color: var(--violet-dark);
+  font-family: var(--font-caps);
   font-size: 12px;
 }
 
 .chip-text {
   padding: 3px 8px;
   border-radius: 5px;
-  background: var(--paper);
-  color: var(--ink-2);
+  background: var(--lavender);
+  color: var(--ink-55);
   font-size: 12px;
 }
 
 .scene-foot {
   margin-top: 16px;
   padding-top: 14px;
-  border-top: 1px dashed var(--rule);
+  border-top: 1px dashed var(--hairline);
 }
 
 .mark-form {
@@ -978,10 +1075,10 @@ button.ruler-seg:hover {
 
 .mark-form textarea {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #e3c9c4;
+  padding: 11px 13px;
+  border: 1px solid var(--border);
   border-radius: var(--radius-s);
-  background: var(--red-wash);
+  background: var(--lavender);
   color: var(--ink);
   line-height: 1.55;
   resize: vertical;
@@ -989,8 +1086,8 @@ button.ruler-seg:hover {
 
 .mark-form textarea:focus {
   outline: none;
-  border-color: var(--red);
-  box-shadow: 0 0 0 3px rgba(181, 55, 42, 0.12);
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px rgba(123, 111, 224, 0.16);
 }
 
 .mark-actions {
@@ -1010,9 +1107,9 @@ button.ruler-seg:hover {
   flex-wrap: wrap;
   margin-top: 6px;
   padding: 14px 18px;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.93);
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(10px);
   box-shadow: var(--lift-2);
 }
@@ -1024,7 +1121,7 @@ button.ruler-seg:hover {
 }
 
 /* ------------------------------------------------------------------ *
- * Render step
+ * Render step — ruled stage rows.
  * ------------------------------------------------------------------ */
 .render-card {
   padding: 26px 28px;
@@ -1041,73 +1138,79 @@ button.ruler-seg:hover {
 
 .stages {
   display: grid;
-  gap: 1px;
+  gap: 0;
   list-style: none;
   padding: 0;
-  margin: 22px 0 0;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-s);
-  overflow: hidden;
-  background: var(--rule-soft);
+  margin: 24px 0 0;
+  border-top: 1px solid var(--hairline);
 }
 
 .stage {
   display: grid;
-  grid-template-columns: 26px 1fr auto;
+  grid-template-columns: 24px 1fr auto;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  background: var(--card);
+  gap: 14px;
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--hairline);
+  background: var(--bg);
   font-size: 14px;
-  color: var(--ink-3);
+  color: var(--ink-55);
+}
+
+.stage span:nth-child(2) {
+  font-weight: 700;
+  color: var(--ink);
 }
 
 .stage-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  border: 1px solid var(--rule);
-  background: var(--paper);
+  border: 1px solid var(--border);
+  background: var(--bg);
   justify-self: center;
 }
 
 .stage.is-done {
-  color: var(--ink-2);
+  color: var(--ink-55);
 }
 
 .stage.is-done .stage-icon {
-  border-color: var(--pen);
-  background: var(--pen);
-  box-shadow: inset 0 0 0 3px var(--card);
+  border-color: var(--violet);
+  background: var(--violet);
+  box-shadow: inset 0 0 0 3px var(--bg);
 }
 
 .stage.is-live {
   color: var(--ink);
-  font-weight: 560;
-  background: #fffdf3;
 }
 
 .stage.is-live .stage-icon {
-  border-color: var(--pen);
+  border-color: var(--violet);
   border-top-color: transparent;
   background: transparent;
   animation: spin 0.9s linear infinite;
 }
 
 .stage.is-failed {
-  color: var(--red);
-  background: var(--red-wash);
+  color: var(--err);
+}
+
+.stage.is-failed span:nth-child(2) {
+  color: var(--err);
 }
 
 .stage.is-failed .stage-icon {
-  border-color: var(--red);
-  background: var(--red);
+  border-color: var(--err);
+  background: var(--err);
 }
 
 .stage-note {
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 11px;
-  color: var(--ink-3);
+  font-family: var(--font-caps);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-45);
 }
 
 @keyframes spin {
@@ -1118,7 +1221,7 @@ button.ruler-seg:hover {
 
 .render-message {
   margin: 18px 0 0;
-  color: var(--ink-2);
+  color: var(--ink-55);
 }
 
 /* ------------------------------------------------------------------ *
@@ -1149,7 +1252,7 @@ button.ruler-seg:hover {
 }
 
 .video-foot .u-label {
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .cards-grid {
@@ -1160,9 +1263,9 @@ button.ruler-seg:hover {
 
 .recap {
   overflow: hidden;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius);
-  background: var(--card);
+  background: var(--bg);
 }
 
 .recap img {
@@ -1171,7 +1274,7 @@ button.ruler-seg:hover {
   object-fit: cover;
   display: block;
   background: var(--ink);
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--hairline);
 }
 
 .recap-foot {
@@ -1184,27 +1287,158 @@ button.ruler-seg:hover {
 
 .recap-plan {
   padding: 13px 14px;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius-s);
-  background: var(--card);
+  background: var(--lavender);
 }
 
 .recap-plan p {
   margin: 6px 0 0;
   font-size: 13px;
   line-height: 1.5;
-  color: var(--ink-2);
+  color: var(--ink-55);
 }
 
 .link-download {
-  color: var(--pen);
-  font-size: 13px;
-  font-weight: 560;
+  color: var(--violet);
+  font-family: var(--font-caps);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   text-decoration: none;
 }
 
 .link-download:hover {
   text-decoration: underline;
+}
+
+/* ------------------------------------------------------------------ *
+ * Assignment: delegable work vs the student's own thinking.
+ * ------------------------------------------------------------------ */
+.task-split {
+  display: grid;
+  gap: 10px;
+}
+
+.task-row {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-s);
+  padding: 11px 13px;
+}
+
+.task-row.is-core {
+  background: var(--lavender);
+  border: 1px solid var(--violet-200);
+}
+
+.probe-card {
+  background: var(--bg);
+  border: 1px solid var(--hairline);
+  border-left: 3px solid var(--violet);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+
+.probe-card p:first-child {
+  font-family: var(--font-title);
+  font-size: 18px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.probe-quote {
+  border-left: 2px solid var(--violet-200);
+  color: var(--ink-55);
+  font-style: italic;
+  margin: 10px 0 0;
+  padding-left: 12px;
+}
+
+.score-row {
+  display: flex;
+  gap: 28px;
+  margin: 4px 0 14px;
+}
+
+.resources {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-s);
+  padding: 12px 14px;
+}
+
+.resources summary {
+  cursor: pointer;
+  font-family: var(--font-caps);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--violet);
+}
+
+.resources[open] summary {
+  margin-bottom: 12px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Voice orb — violet gradient, halo rings while listening.
+ * ------------------------------------------------------------------ */
+.orb-stage {
+  display: grid;
+  gap: 18px;
+  justify-items: center;
+  padding: 26px 0 10px;
+}
+
+.orb {
+  --level: 0;
+  width: 168px;
+  height: 168px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 34% 30%,
+    #d8d3f6 0%,
+    #9c90e8 42%,
+    #7b6fe0 72%,
+    #5e52c7 100%
+  );
+  box-shadow:
+    0 0 0 14px rgba(123, 111, 224, 0.14),
+    0 0 0 28px rgba(123, 111, 224, 0.06),
+    0 18px 40px rgba(94, 82, 199, 0.35);
+  transition: transform 0.09s ease-out;
+}
+
+.orb.is-asking {
+  animation: orb-speak 1.1s ease-in-out infinite;
+}
+
+.orb.is-listening {
+  transform: scale(calc(1 + var(--level) * 0.4));
+}
+
+.orb.is-waiting {
+  animation: orb-breathe 2.4s ease-in-out infinite;
+}
+
+.orb-stage .u-muted {
+  font-family: var(--font-caps);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--violet);
+}
+
+@keyframes orb-speak {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+@keyframes orb-breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.95); opacity: 0.78; }
 }
 
 /* ------------------------------------------------------------------ *
@@ -1228,18 +1462,9 @@ button.ruler-seg:hover {
     display: none;
   }
 
-  .doors {
+  .door-grid {
     grid-template-columns: 1fr;
-  }
-
-  .door {
-    border-right: 0;
-    border-bottom: 1px solid var(--rule);
-    padding-block: 40px;
-  }
-
-  .door-facts {
-    min-height: 0;
+    max-width: 420px;
   }
 }
 
@@ -1315,95 +1540,4 @@ button.ruler-seg:hover {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-}
-
-/* ------------------------------------------------------------------ *
- * Assignment: the split between delegable work and the student's own thinking.
- * ------------------------------------------------------------------ */
-
-.task-split {
-  display: grid;
-  gap: 10px;
-}
-
-.task-row {
-  border: 1px solid var(--rule-soft);
-  border-radius: var(--radius-s);
-  padding: 10px 12px;
-}
-
-.task-row.is-core {
-  background: var(--pen-wash);
-  border-color: var(--rule);
-}
-
-/* The one question. Marker yellow says "you are here" and nothing else does. */
-.probe-card {
-  background: var(--card);
-  border: 1px solid var(--rule);
-  border-left: 4px solid var(--marker);
-  border-radius: var(--radius);
-  padding: 16px 18px;
-}
-
-.probe-quote {
-  border-left: 2px solid var(--rule);
-  color: var(--ink-2);
-  font-style: italic;
-  margin: 10px 0 0;
-  padding-left: 12px;
-}
-
-.score-row {
-  display: flex;
-  gap: 28px;
-  margin: 4px 0 12px;
-}
-
-/* The conversation orb. Pen blue speaks, the marker ring listens, and while it
-   listens its size follows the student's real microphone level via --level. */
-.orb-stage {
-  display: grid;
-  gap: 16px;
-  justify-items: center;
-  padding: 22px 0 8px;
-}
-
-.orb {
-  --level: 0;
-  width: 116px;
-  height: 116px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 32% 28%,
-    color-mix(in srgb, var(--pen) 30%, var(--card)),
-    var(--pen) 78%
-  );
-  box-shadow: 0 0 44px color-mix(in srgb, var(--pen) 35%, transparent);
-  transition: transform 0.09s ease-out;
-}
-
-.orb.is-asking {
-  animation: orb-speak 1.1s ease-in-out infinite;
-}
-
-.orb.is-listening {
-  box-shadow:
-    0 0 0 6px color-mix(in srgb, var(--marker) 55%, transparent),
-    0 0 48px color-mix(in srgb, var(--pen) 40%, transparent);
-  transform: scale(calc(1 + var(--level) * 0.45));
-}
-
-.orb.is-waiting {
-  animation: orb-breathe 2.4s ease-in-out infinite;
-}
-
-@keyframes orb-speak {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-}
-
-@keyframes orb-breathe {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(0.94); opacity: 0.72; }
 }

@@ -48,7 +48,7 @@ export function SetupStep({
     <form onSubmit={submit}>
       <div className="page-head">
         <h1 className="u-display" ref={headingRef} tabIndex={-1}>
-          Set up the lesson
+          What should the video teach?
         </h1>
         {subtopic?.hero && (
           <span

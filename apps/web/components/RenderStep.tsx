@@ -22,7 +22,7 @@ export function RenderStep({ elapsedSeconds, headingRef, job, onStartOver, story
     <div className="stack">
       <div className="page-head">
         <h1 className="u-display" ref={headingRef} tabIndex={-1}>
-          {failed ? "The render stopped" : "Rendering"}
+          {failed ? "The render stopped" : "Rendering your lesson"}
         </h1>
         {!failed && <span className="tag u-mono">{timecode(elapsedSeconds)} elapsed</span>}
       </div>

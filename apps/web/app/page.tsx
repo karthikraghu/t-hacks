@@ -38,37 +38,49 @@ export default function HomePage() {
       <AppHeader />
 
       <main className="doors">
-        <Link className="door door-teacher" href="/lessons">
-          <span className="u-label">Teacher</span>
-          <span className="door-title">Lessons</span>
-          <span className="door-facts">
-            {subjects && subjects.length > 0 && (
-              <span className="u-mono">
-                {subjects.map((subject) => subject.label).join(" · ")} · {topics} topics
-              </span>
-            )}
-            <span className="u-mono">video · 3 recap cards</span>
-          </span>
-          <span className="door-go">
-            Make a lesson <span aria-hidden="true">→</span>
-          </span>
-        </Link>
+        <div className="hero">
+          <p className="hero-intro">Your studio for</p>
+          <span className="hero-line-1">Micro-Lessons</span>
+          <span className="hero-line-2">&amp; Assignments</span>
+          <p className="hero-sub">
+            Plan a narrated maths lesson in minutes, or hand in the work and be marked on your own
+            reasoning.
+          </p>
+        </div>
 
-        <Link className="door door-student" href="/assignments">
-          <span className="u-label">Student</span>
-          <span className="door-title">Assignments</span>
-          <span className="door-facts">
-            {assignment && <span className="u-mono">{assignment.title}</span>}
-            {coreTasks > 0 && (
-              <span className="u-mono">
-                {coreTasks} {coreTasks === 1 ? "task is" : "tasks are"} yours
-              </span>
-            )}
-          </span>
-          <span className="door-go">
-            Open <span aria-hidden="true">→</span>
-          </span>
-        </Link>
+        <div className="door-grid">
+          <Link className="door door-teacher" href="/lessons">
+            <span className="u-label">Teacher</span>
+            <span className="door-title">Lessons</span>
+            <span className="door-facts">
+              {subjects && subjects.length > 0 && (
+                <span>
+                  {subjects.map((subject) => subject.label).join(" · ")} · {topics} topics
+                </span>
+              )}
+              <span>video · 3 recap cards</span>
+            </span>
+            <span className="door-go">
+              Start <span aria-hidden="true">→</span>
+            </span>
+          </Link>
+
+          <Link className="door door-student" href="/assignments">
+            <span className="u-label">Students</span>
+            <span className="door-title">Assignments</span>
+            <span className="door-facts">
+              {assignment && <span>{assignment.title}</span>}
+              {coreTasks > 0 && (
+                <span>
+                  {coreTasks} {coreTasks === 1 ? "task is" : "tasks are"} yours
+                </span>
+              )}
+            </span>
+            <span className="door-go">
+              Open <span aria-hidden="true">→</span>
+            </span>
+          </Link>
+        </div>
       </main>
     </div>
   );
