@@ -123,12 +123,14 @@ class MinimalHackathonChecks(unittest.TestCase):
         )
         self.storage = Storage(self.settings.artifact_root)
         self.subjects = SubjectRegistry(self.settings.content_root)
+        # The math hero — the prepared lesson whose storyboard and fallback bundle ship
+        # with the pack. It is what is_hero() must return True for.
         self.request = LessonRequest(
-            grade=8,
-            topic_id="linear-functions",
-            subtopic_id="understanding-slope",
+            grade=7,
+            topic_id="data-and-constructions",
+            subtopic_id="mean-and-median",
             level="standard",
-            method="auto",
+            method="worked_example",
         )
         generated = self.subjects.pack("math").hero_storyboard(self.request)
         self.storyboard = Storyboard(

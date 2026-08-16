@@ -350,7 +350,8 @@
               "misconceptions": [
                 "The median is read off without ordering the data first.",
                 "Mean and median are expected to always coincide."
-              ]
+              ],
+              "hero": true
             },
             {
               "id": "constructing-triangles",
@@ -458,7 +459,6 @@
             {
               "id": "understanding-slope",
               "label": "Understanding slope",
-              "hero": true,
               "default_method": "auto",
               "learning_goal": "Explain and calculate slope as the ratio of the change in height to the change across.",
               "misconceptions": [

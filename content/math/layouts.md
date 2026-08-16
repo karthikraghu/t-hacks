@@ -6,8 +6,14 @@ Describe visuals that fit one calm frame, choosing one of two shapes per section
   "6 up" or "change across". Keep `on_screen_text` for these sections to labels of that length.
 - A statement section: no diagram, and at most four short lines of text or formulas.
 
-A section that needs a full explanatory sentence on screen is a statement section, because a sentence does
-not fit alongside a diagram.
+Prefer a diagram section whenever the idea can be drawn. Anything about a line, a slope, a rate, a
+relationship between two quantities, a comparison, or a geometric figure is a diagram section — the
+coordinate picture builds and moves through the whole narration and is what holds the student's eye.
+Reserve statement sections for a formula that has just been shown as a picture, or for the closing recap,
+and aim for at least half of the sections — and every section that introduces or develops the core idea —
+to be diagram sections. A section that genuinely needs a full explanatory sentence on screen is a statement
+section, because a sentence does not fit alongside a diagram; but a short label on a diagram is almost
+always better than a sentence with no picture.
 
 # Codegen
 
@@ -29,6 +35,14 @@ def section_1(self, duration):
     run = Line(axes.c2p(1, 3), axes.c2p(4, 3), color=VAR_COLOR, stroke_width=8)
     rise = Line(axes.c2p(4, 3), axes.c2p(4, 9), color=CHANGE_COLOR, stroke_width=8)
 
+    # A point that rides the line during a ValueTracker sweep keeps the diagram alive
+    # through the later half of the section, instead of holding a still frame.
+    tracker = ValueTracker(1)
+    walker = always_redraw(
+        lambda: Dot(axes.c2p(tracker.get_value(), 2 * tracker.get_value() + 1),
+                    color=RESULT_COLOR).scale(1.1)
+    )
+
     # Every label lives in one column to the right of the axes, so no label can ever
     # land on the line, on a point or on the axis numbers.
     legend = VGroup(
@@ -37,9 +51,14 @@ def section_1(self, duration):
     ).arrange(DOWN, aligned_edge=LEFT, buff=0.35)
     legend.next_to(axes, RIGHT, buff=0.5)
 
-    self.play(FadeIn(heading), Create(axes), run_time=1.6)
-    self.play(Create(line), run_time=1.2)
+    # Beats spread through the section, each followed by a short wait so the element
+    # lands with its narration; the sweep fills the rest with motion, not a frozen frame.
+    self.play(FadeIn(heading), Create(axes), run_time=1.4)
+    self.wait(1.5)
+    self.play(Create(line), FadeIn(walker), run_time=1.2)
+    self.wait(1.5)
     self.play(Create(run), Create(rise), FadeIn(legend), run_time=1.4)
+    self.play(tracker.animate.set_value(4), run_time=3.0)
 
     remaining = duration - (self.time - start)
     self.wait(max(0, remaining))
@@ -76,8 +95,12 @@ def section_3(self, duration):
     body = VGroup(formula, words, example).arrange(DOWN, buff=0.42)
     fit_content(body)
 
-    self.play(FadeIn(heading), Write(formula), run_time=1.6)
+    # Reveal one line at a time, with a wait between, so the stack builds with the
+    # narration rather than appearing all at once and then holding.
+    self.play(FadeIn(heading), Write(formula), run_time=1.5)
+    self.wait(1.6)
     self.play(FadeIn(words), run_time=1.0)
+    self.wait(1.6)
     self.play(Write(example), run_time=1.2)
 
     remaining = duration - (self.time - start)

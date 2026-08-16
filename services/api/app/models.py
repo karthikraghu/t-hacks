@@ -90,12 +90,33 @@ class RecapCard(BaseModel):
     latex: list[str] = Field(default_factory=list, max_length=5)
 
 
+class GeneratedAssignmentTask(BaseModel):
+    # The AI-facing shape for one task. `AssignmentTask` (the stored twin) restates
+    # these fields bare, because a stored model carries no `Field` constraints.
+    description: str = Field(min_length=4, max_length=200)
+    mode: TaskMode
+    rationale: str = Field(min_length=4, max_length=200)
+
+
+class GeneratedAssignment(BaseModel):
+    # Written in the same model call as the storyboard, so the lesson always ends with
+    # an assignment. The three-to-five task count is structural here; that at least two
+    # of them are `core` is checked in the route, since a schema cannot count by mode.
+    title: str = Field(min_length=4, max_length=120)
+    brief: str = Field(min_length=20, max_length=800)
+    tasks: list[GeneratedAssignmentTask] = Field(min_length=3, max_length=5)
+
+
 class GeneratedStoryboard(BaseModel):
     title: str = Field(min_length=4, max_length=120)
     learning_objective: str = Field(min_length=10, max_length=400)
     selected_methods: list[TeachingMethod] = Field(min_length=1, max_length=2)
     sections: list[GeneratedSection] = Field(min_length=2, max_length=6)
     recap_cards: list[RecapCard] = Field(min_length=3, max_length=3)
+    # The assignment rides inside the storyboard schema so one model call produces both,
+    # and the existing subject reviewer, which returns a corrected `GeneratedStoryboard`,
+    # validates and can repair the assignment for free.
+    assignment: GeneratedAssignment
 
 
 class Storyboard(BaseModel):
@@ -172,6 +193,10 @@ class Assignment(BaseModel):
     title: str
     brief: str
     tasks: list[AssignmentTask]
+    #: Set to the storyboard/job id when this assignment was generated with a lesson, so
+    #: `GET /api/assignments` can keep the generated ones out of the standalone demo list.
+    #: Left unset on the seeded standalone assignment, which is why it carries a default.
+    storyboard_id: str | None = None
     #: Demo scaffolding: a response the page can drop into the box so the flow can be
     #: shown without typing one. It belongs beside the seeded assignment, not in the
     #: client, because a real assignment simply leaves it unset.

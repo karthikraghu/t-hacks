@@ -1,114 +1,149 @@
 {
-  "title": "Understanding slope: how steeply does a line rise?",
-  "learning_objective": "Explain and calculate slope as the ratio of the change in height to the change across.",
+  "title": "Mean and Median: What Does a Typical Value Show?",
+  "learning_objective": "Calculate the mean and median of a data set and explain which one an outlier distorts.",
   "selected_methods": [
-    "visual_linking",
     "worked_example"
   ],
   "sections": [
     {
-      "title": "A path gets steeper",
-      "purpose": "Everyday starting point",
-      "narration": "Picture a path that runs to the right and gains height as it goes. Some paths feel gentle, others feel steep. How can we describe that steepness with a single number? To do it, we compare how far we move across with how far we climb.",
-      "visual_plan": "A coordinate system appears. A point moves along a rising line; the horizontal movement and the gain in height are labelled separately.",
+      "title": "A bus-waiting question",
+      "purpose": "Open with a familiar situation and introduce the data set that will return throughout the lesson.",
+      "narration": "Imagine recording your bus waits on five days: two, three, three, four, and eight minutes. Most waits are short, but one is much longer. We will find a typical value and see what that long wait changes.",
+      "visual_plan": "Diagram section. Show a horizontal coordinate axis for minutes from zero to eight, with five blue dots at 2, 3, 3, 4, and 8. Highlight the dot at 8 in red. Reveal the three labels gradually.",
       "on_screen_text": [
-        "change across",
-        "change in height"
+        "wait minutes",
+        "usual waits",
+        "one long wait"
       ],
-      "latex": [],
+      "latex": [
+        "2,\\ 3,\\ 3,\\ 4,\\ 8"
+      ],
+      "duration_seconds": 20.0,
+      "check_prompt": null
+    },
+    {
+      "title": "Finding the median",
+      "purpose": "Build the median from the ordered data and address the need to order before choosing the middle.",
+      "narration": "Put the waiting times in order. They already are, so the middle entry is easy to see: three. The median is the middle value of an ordered data set. Ordering matters because the middle position has no meaning otherwise. Next, we compare it with the mean.",
+      "visual_plan": "Diagram section. Reuse the same coordinate axis and dots. Animate the five values into an ordered row, then draw a blue vertical marker through the central 3. Keep the 8-dot red to show it is not the middle. Use only three labels.",
+      "on_screen_text": [
+        "ordered data",
+        "middle value",
+        "median"
+      ],
+      "latex": [
+        "2\\ <\\ 3\\ <\\ 3\\ <\\ 4\\ <\\ 8",
+        "\\mathrm{median}=3"
+      ],
+      "duration_seconds": 22.0,
+      "check_prompt": "Which value is the median after the data are ordered?"
+    },
+    {
+      "title": "Finding the mean",
+      "purpose": "Formalise the mean as equal sharing and show how the long wait pulls it away from the median.",
+      "narration": "The mean asks: if the total waiting time were shared equally across five days, how long would each wait be? Add the values and divide by five. A value unusually far from the others is called an outlier. Here, eight raises the mean more than it raises the median.",
+      "visual_plan": "Diagram section. Show five blue columns or dots at the data values on one coordinate axis, then animate them toward a common orange level at 4. Keep the 8-minute point red and the median marker blue. Show the three labels as the comparison develops.",
+      "on_screen_text": [
+        "mean",
+        "median",
+        "outlier"
+      ],
+      "latex": [
+        "\\mathrm{mean}=\\frac{2+3+3+4+8}{5}=4",
+        "\\mathrm{median}=3"
+      ],
+      "duration_seconds": 22.0,
+      "check_prompt": "Why does the eight-minute wait affect the mean more strongly than the median?"
+    },
+    {
+      "title": "One complete calculation",
+      "purpose": "Carry the single bus example through both procedures and state the effect of the outlier precisely.",
+      "narration": "Check the whole example. The sum is two plus three plus three plus four plus eight: twenty. There are five values, so the mean is twenty divided by five, or four minutes. The middle value is three, so the median is three minutes. The outlier affects the mean more than the median.",
+      "visual_plan": "Diagram section. Display the ordered five-dot plot. Animate a brace from the five values to the sum, then show an orange mean line at 4 and a blue median line at 3. Highlight 8 in red. Use three concise labels only.",
+      "on_screen_text": [
+        "sum ÷ count",
+        "mean = 4",
+        "median = 3"
+      ],
+      "latex": [
+        "2+3+3+4+8=20",
+        "\\mathrm{mean}=20\\div5=4",
+        "\\mathrm{median}=3"
+      ],
+      "duration_seconds": 25.0,
+      "check_prompt": "Explain in one sentence why 8 affects the mean more than the median."
+    },
+    {
+      "title": "Return to the bus",
+      "purpose": "Close the arc by returning to the hook, checking recall, and stating what the student can now do.",
+      "narration": "For these bus waits, the mean is four minutes and the median is three. The long wait distorts the mean more. Which measure would you trust more when one value is unusually large, and why? Pause and think.",
+      "visual_plan": "Statement section. Use a calm closing card with the same colours: orange for mean, blue for median, and red for outlier. Reveal the takeaway, then the recall question, then the closing sentence.",
+      "on_screen_text": [
+        "Mean: 4 minutes",
+        "Median: 3 minutes",
+        "Outlier: 8 minutes",
+        "Which is less distorted?"
+      ],
+      "latex": [
+        "\\mathrm{mean}=4",
+        "\\mathrm{median}=3"
+      ],
       "duration_seconds": 16.0,
-      "check_prompt": null
-    },
-    {
-      "title": "The slope triangle",
-      "purpose": "Build the graphical picture",
-      "narration": "Start at one point on the line and walk three units to the right. Now measure how much higher you are: six units. Those two movements form a right angled triangle under the line. We call it the slope triangle, because it turns steepness into two lengths you can read straight off the grid.",
-      "visual_plan": "A ValueTracker moves the point from (1, 3) to (4, 9). A labelled triangle shows delta x equals 3 and delta y equals 6.",
-      "on_screen_text": [
-        "3 to the right",
-        "6 upwards"
-      ],
-      "latex": [
-        "\\Delta x = 3",
-        "\\Delta y = 6"
-      ],
-      "duration_seconds": 21.0,
-      "check_prompt": null
-    },
-    {
-      "title": "Slope is a ratio",
-      "purpose": "Connect the picture to the formula",
-      "narration": "Slope is the change in height divided by the change across. Here the height changes by six while we move three units to the right. Six divided by three is two. So the slope is two, and that single number tells you the line climbs two units for every step you take to the right.",
-      "visual_plan": "The slope triangle stays visible. The formula builds up in three large steps, with the numerator and denominator each carrying their own text label.",
-      "on_screen_text": [
-        "change in height",
-        "change across",
-        "slope"
-      ],
-      "latex": [
-        "m = \\frac{\\Delta y}{\\Delta x}",
-        "m = \\frac{6}{3} = 2"
-      ],
-      "duration_seconds": 21.0,
-      "check_prompt": null
-    },
-    {
-      "title": "Calculating between two points",
-      "purpose": "Worked example",
-      "narration": "Now take two labelled points: A at one, three and B at four, nine. First subtract the y values: nine minus three is six. Then subtract the x values in the same order: four minus one is three. Divide six by three and you get two again. Keeping the same order in both subtractions is what keeps the sign correct.",
-      "visual_plan": "The two points are labelled. The differences appear one after another before the result is highlighted and checked against the graph.",
-      "on_screen_text": [
-        "y difference first",
-        "then x difference",
-        "check the result"
-      ],
-      "latex": [
-        "A(1|3)",
-        "B(4|9)",
-        "m = \\frac{9-3}{4-1} = 2"
-      ],
-      "duration_seconds": 23.0,
-      "check_prompt": null
-    },
-    {
-      "title": "Your turn",
-      "purpose": "Recall and summary",
-      "narration": "Remember the rule: slope is the change in height divided by the change across. Now here is something to think about. If a line climbs twice as high over the same distance across, what happens to its slope? Explain your reasoning in one sentence.",
-      "visual_plan": "The key formula and a small labelled slope triangle appear. The thinking question then stays large and calm on screen.",
-      "on_screen_text": [
-        "What changes?"
-      ],
-      "latex": [
-        "m = \\frac{\\Delta y}{\\Delta x}"
-      ],
-      "duration_seconds": 18.0,
-      "check_prompt": "Explain in one sentence why doubling the change in height doubles the slope when the change across stays the same."
+      "check_prompt": "Which measure is less distorted by one unusually large value, and why?"
     }
   ],
   "recap_cards": [
     {
-      "title": "Slope as a ratio",
-      "message": "The change in height divided by the change across.",
-      "visual_plan": "Labelled slope triangle mapped onto the numerator and denominator.",
+      "title": "Median",
+      "message": "Order the data first. The median is the middle value.",
+      "visual_plan": "Show the five ordered blue dots, with a blue marker on the central 3. Keep the red 8 at the far right.",
       "latex": [
-        "m = \\frac{\\Delta y}{\\Delta x}"
+        "2<3<3<4<8",
+        "\\mathrm{median}=3"
       ]
     },
     {
-      "title": "Between two points",
-      "message": "Subtract the coordinates in the same order in both differences.",
-      "visual_plan": "Points A and B in one coordinate system next to the difference formula.",
+      "title": "Mean",
+      "message": "Add all values and divide by how many values there are.",
+      "visual_plan": "Show the five data values feeding into one orange level at 4, representing equal sharing.",
       "latex": [
-        "m = \\frac{y_2-y_1}{x_2-x_1}"
+        "\\mathrm{mean}=\\frac{2+3+3+4+8}{5}=4"
       ]
     },
     {
-      "title": "Worked example",
-      "message": "Six units higher over three units to the right gives a slope of two.",
-      "visual_plan": "Graph with a labelled triangle for delta x = 3 and delta y = 6.",
+      "title": "Outlier effect",
+      "message": "An unusually large value distorts the mean more than the median.",
+      "visual_plan": "Show the red outlier at 8 pulling the orange mean line above the blue median line.",
       "latex": [
-        "m = \\frac{6}{3} = 2"
+        "\\mathrm{mean}=4",
+        "\\mathrm{median}=3"
       ]
     }
-  ]
+  ],
+  "assignment": {
+    "title": "A New Set of Delivery Times",
+    "brief": "A courier records the delivery times for five parcels: 3, 4, 4, 5, and 14 minutes. Use this data set to calculate and compare the mean and median. Write your answers and explanations in complete sentences; no diagram is needed.",
+    "tasks": [
+      {
+        "description": "Write the delivery times in increasing order and identify the median.",
+        "mode": "core",
+        "rationale": "Ordering the data and choosing the middle value is the central reasoning step for the median."
+      },
+      {
+        "description": "Calculate the mean by adding the five times and dividing the total by 5.",
+        "mode": "ai_assistable",
+        "rationale": "The arithmetic is mechanical once the correct mean procedure has been chosen."
+      },
+      {
+        "description": "Decide whether 14 minutes is an outlier and explain which measure it distorts more.",
+        "mode": "core",
+        "rationale": "Interpreting the outlier’s effect is the main mathematical judgement in the lesson."
+      },
+      {
+        "description": "Suppose the 14-minute delivery were changed to 6 minutes; calculate the new mean and explain in writing which measure changes more.",
+        "mode": "core",
+        "rationale": "Comparing a changed data set tests whether you can explain the different sensitivity of mean and median."
+      }
+    ]
+  }
 }

@@ -70,12 +70,20 @@ ERROR_COLOR = "#FF6B6B"
 
 - Implement one method per storyboard section: `section_1(self, duration)`, `section_2(self, duration)`,
   and so on, called in order from `construct`.
-- Read elapsed time only through `self.time`: `start = self.time`, then
-  `remaining = duration - (self.time - start)`, then `self.wait(max(0, remaining))`.
-- Keep the sum of `run_time` values in a section at or below 60 percent of that section's duration, and
-  let `self.wait(remaining)` fill the rest. Animations cannot be shortened afterwards, so a section that
-  overruns its narration pushes every later section out of sync and the end of the video is cut off during
-  muxing.
+- Read elapsed time only through `self.time`: `start = self.time` at the top of every section, and end it
+  with `remaining = duration - (self.time - start)` then `self.wait(max(0, remaining))`.
+- Pace each section so something on screen keeps changing across its whole length, instead of animating
+  everything at the start and holding a frozen frame for the rest — a still frame under continuing narration
+  is the main thing to avoid. Reveal the section's elements in three or four beats spread through the
+  duration: play a beat, then `self.wait` a second or two so the new element lands with the narration that
+  introduces it, then the next beat. Where the idea involves change — a point moving along a line, a triangle
+  growing, a quantity varying — animate it with a `ValueTracker` sweep placed in the later half of the
+  section, so that motion carries the stretch of narration that would otherwise play over a still frame.
+- Keep the total of all `run_time` values plus the between-beat waits comfortably under the section's
+  duration, so the closing `self.wait(remaining)` stays positive: it is a short final hold and a safety
+  backstop, not where most of the section's time is spent. Animations cannot be shortened afterwards, so a
+  section that overruns its narration pushes every later section out of sync and the end of the video is cut
+  off during muxing — when in doubt, use fewer, calmer beats rather than risk an overrun.
 - Use the supplied section durations and derive nothing from a hardcoded total.
 - Fade out a section with one shared helper, in a single `self.play` call, so no element survives into the
   next section:

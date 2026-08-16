@@ -89,9 +89,12 @@ class AIService:
         permit_hero_draft: bool,
     ) -> tuple[GeneratedStoryboard, bool]:
         pack = self.subjects.pack(request.subject_id)
+        # Hardcoded instant demo path: a hero subtopic always serves its prepared
+        # storyboard with no live model call, so the demo is deterministic and fast and
+        # the script matches the pre-rendered fallback video exactly.
+        if permit_hero_draft:
+            return pack.hero_storyboard(request), False
         if not self.settings.model_is_configured:
-            if permit_hero_draft:
-                return pack.hero_storyboard(request), False
             raise ModelNotConfigured("This topic requires a configured model.")
 
         payload = {

@@ -69,5 +69,31 @@
       "visual_plan": "Graph with the time span and distance gain marked, next to the calculation.",
       "latex": ["v = \\frac{6\\,\\mathrm{m}}{3\\,\\mathrm{s}} = 2\\,\\mathrm{\\frac{m}{s}}"]
     }
-  ]
+  ],
+  "assignment": {
+    "title": "Comparing two journeys",
+    "brief": "Two cyclists ride in a straight line. Cyclist A travels from 0 metres at 0 seconds to 60 metres at 20 seconds. Cyclist B travels from 0 metres at 0 seconds to 60 metres at 40 seconds. Use only these readings; you have everything you need.",
+    "tasks": [
+      {
+        "description": "Set out both cyclists' readings as a small table",
+        "mode": "ai_assistable",
+        "rationale": "Arranging the given readings is presentation, not physics."
+      },
+      {
+        "description": "Work out each cyclist's speed from their readings",
+        "mode": "ai_assistable",
+        "rationale": "Dividing distance by time is mechanical once the readings are set out."
+      },
+      {
+        "description": "Say which cyclist is faster and explain how the steepness of their distance-time line shows it",
+        "mode": "core",
+        "rationale": "Linking speed to the steepness of the graph is the idea the lesson teaches."
+      },
+      {
+        "description": "Explain what a flat, horizontal section of a distance-time graph would mean the cyclist is doing",
+        "mode": "core",
+        "rationale": "Reading meaning from the shape of the graph is interpretation, not calculation."
+      }
+    ]
+  }
 }

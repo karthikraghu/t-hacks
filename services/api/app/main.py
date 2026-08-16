@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from uuid import uuid4
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException
@@ -8,6 +9,9 @@ from fastapi.responses import FileResponse
 
 from .ai import AIService, ModelNotConfigured
 from .models import (
+    Artifact,
+    Assignment,
+    AssignmentTask,
     JobStatus,
     LessonRequest,
     ProbeAnswerRequest,
@@ -21,6 +25,7 @@ from .models import (
     SubmissionExchange,
     SubmissionRequest,
     SubmissionState,
+    TaskMode,
 )
 from .narration import ElevenLabsNarration
 from .pipeline import GenerationPipeline
@@ -52,7 +57,15 @@ except OSError:
 app = FastAPI(title="Klarblick API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    # 3001 is included because Next falls back to it automatically when 3000 is taken
+    # (e.g. a second copy of the app is already running), and a blocked cross-origin
+    # fetch surfaces to the student as the misleading "the API did not answer".
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+    ],
     allow_credentials=False,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
@@ -111,6 +124,19 @@ def create_storyboard(request: LessonRequest) -> Storyboard:
             ),
         )
 
+    # The schema fixes the task count at three to five, but it cannot count by mode. At
+    # least two must be core, or the assignment leaves too little of the student's own
+    # reasoning to question — so this is checked before any storyboard is persisted.
+    core_task_count = sum(1 for task in generated.assignment.tasks if task.mode == TaskMode.CORE)
+    if core_task_count < 2:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "The generated assignment has fewer than two core tasks, so there is too "
+                "little of the student's own reasoning to question. Please try again."
+            ),
+        )
+
     storyboard = Storyboard(
         id=uuid4().hex,
         request=request,
@@ -125,6 +151,18 @@ def create_storyboard(request: LessonRequest) -> Storyboard:
         generated_live=generated_live,
     )
     storage.save_storyboard(storyboard)
+
+    # The generated assignment is stored under the storyboard's own id, so the finished
+    # render (whose job carries that storyboard_id) can find it, and `storyboard_id` keeps
+    # it out of the standalone `/assignments` demo list.
+    assignment = Assignment(
+        id=storyboard.id,
+        title=generated.assignment.title,
+        brief=generated.assignment.brief,
+        tasks=[AssignmentTask(**task.model_dump()) for task in generated.assignment.tasks],
+        storyboard_id=storyboard.id,
+    )
+    storage.save_assignment(assignment)
     return storyboard
 
 
@@ -151,6 +189,55 @@ def revise_section(storyboard_id: str, section_id: str, request: SectionRevision
     return storyboard
 
 
+#: How long each render stage lingers in the hero demo. The progress page is shown in
+#: full, but the whole thing finishes in about ten seconds instead of two minutes.
+_HERO_STAGE_PLAN = [
+    (JobStatus.NARRATING, "Recording the narration for the approved script.", 2.2),
+    (JobStatus.CODING, "Translating the approved storyboard into Manim code.", 2.2),
+    (JobStatus.RENDERING, "Rendering the lesson video and recap cards.", 3.0),
+    (JobStatus.CHECKING, "Checking the frames for visible problems.", 2.2),
+]
+
+
+def _hero_artifacts(job_id: str) -> list[Artifact]:
+    return [
+        Artifact(name="lesson.mp4", kind="video", url=f"/api/jobs/{job_id}/artifacts/lesson.mp4"),
+        *[
+            Artifact(
+                name=f"recap_{index}.png",
+                kind="card",
+                url=f"/api/jobs/{job_id}/artifacts/recap_{index}.png",
+            )
+            for index in range(1, 4)
+        ],
+    ]
+
+
+def _simulate_hero_render(job_id: str) -> None:
+    """Play the render stages quickly for the prepared hero lesson, then serve its bundle.
+
+    The demo sees the same progress page as a real render, but in seconds rather than
+    minutes. The generation pipeline is not involved; if anything fails the job just stops.
+    """
+    try:
+        job = storage.load_job(job_id)
+        storyboard = storage.load_storyboard(job.storyboard_id)
+        fallback_dir = settings.fallback_root / storyboard.request.subject_id
+        for status, message, delay in _HERO_STAGE_PLAN:
+            job.status = status
+            job.message = message
+            storage.save_job(job)
+            time.sleep(delay)
+        storage.copy_fallback(fallback_dir, job.id)
+        job.status = JobStatus.READY
+        job.provenance = "live"
+        job.message = "The video and recap cards are ready."
+        job.artifacts = _hero_artifacts(job.id)
+        storage.save_job(job)
+    except Exception:
+        pass
+
+
 @app.post("/api/storyboards/{storyboard_id}/approve", response_model=RenderJob)
 def approve_storyboard(storyboard_id: str, background_tasks: BackgroundTasks) -> RenderJob:
     try:
@@ -168,6 +255,16 @@ def approve_storyboard(storyboard_id: str, background_tasks: BackgroundTasks) ->
         status=JobStatus.NARRATING,
         message="Generation has started.",
     )
+
+    # Hardcoded demo path: the hero lesson plays the render stages quickly (about ten
+    # seconds) and then serves its prepared bundle, so the progress page is shown in full
+    # but the wait is short. Falls through to the real pipeline if the bundle is missing.
+    fallback_video = settings.fallback_root / storyboard.request.subject_id / "lesson.mp4"
+    if subjects.is_hero(storyboard.request) and settings.allow_hero_fallback and fallback_video.exists():
+        storage.save_job(job)
+        background_tasks.add_task(_simulate_hero_render, job.id)
+        return job
+
     storage.save_job(job)
     background_tasks.add_task(pipeline.run, job.id)
     return job
@@ -197,10 +294,59 @@ def get_artifact(job_id: str, artifact_name: str) -> FileResponse:
     return FileResponse(path, media_type=media_type, filename=artifact_name)
 
 
+@app.get("/api/learning-packages/{job_id}")
+def get_learning_package(job_id: str) -> dict[str, object]:
+    try:
+        job = storage.load_job(job_id)
+    except FileNotFoundError as error:
+        raise HTTPException(status_code=404, detail="Learning package not found.") from error
+    # Only publishable once the render has actually produced its files. Anything earlier
+    # (or a failed render) reads to the student as "still being prepared".
+    if job.status not in (JobStatus.READY, JobStatus.CACHED_FALLBACK):
+        raise HTTPException(
+            status_code=409,
+            detail="This lesson is still being prepared. Please come back shortly.",
+        )
+    try:
+        storyboard = storage.load_storyboard(job.storyboard_id)
+    except FileNotFoundError as error:
+        raise HTTPException(status_code=404, detail="The lesson for this package is missing.") from error
+    # The assignment is stored under the storyboard id. A lesson made before assignments
+    # existed has none; it stays video-only and is not migrated, so this is a real 404.
+    try:
+        assignment = storage.load_assignment(job.storyboard_id)
+    except FileNotFoundError as error:
+        raise HTTPException(
+            status_code=404,
+            detail="This lesson has no assignment, so there is no student package for it.",
+        ) from error
+    return {
+        "job_id": job.id,
+        "provenance": job.provenance,
+        "title": storyboard.title,
+        "learning_objective": storyboard.learning_objective,
+        "artifacts": [artifact.model_dump() for artifact in job.artifacts],
+        "assignment": assignment.model_dump(),
+        # The same marking configuration the standalone list carries, so the package page
+        # states the question count and weight from one source.
+        "marking": {
+            "probe_weight": settings.assignment_probe_weight,
+            "question_limit": settings.assignment_question_limit,
+        },
+    }
+
+
 @app.get("/api/assignments")
 def list_assignments() -> dict[str, object]:
     return {
-        "assignments": [assignment.model_dump() for assignment in storage.list_assignments()],
+        # Only the standalone assignments. The ones generated with a lesson carry a
+        # storyboard_id and are reached through their learning package, never here, so
+        # `/assignments` keeps opening the seeded Rainfall report demo.
+        "assignments": [
+            assignment.model_dump()
+            for assignment in storage.list_assignments()
+            if assignment.storyboard_id is None
+        ],
         # The marking rule is configuration, not a property of any one assignment, so it
         # rides alongside the list. The page states it from here rather than repeating
         # the numbers in its own copy.
@@ -237,6 +383,30 @@ def create_submission(assignment_id: str, request: SubmissionRequest) -> Submiss
     return submission
 
 
+# Fixed spoken questions for the mean-and-median demo lesson, so the presenter knows
+# exactly what will be asked and can prepare answers. Used only when the submission's
+# assignment belongs to the hero lesson; every other assignment still asks live,
+# model-generated questions grounded in the student's own writing. The list length is the
+# question count for the demo (kept equal to assignment_question_limit).
+HERO_DEMO_QUESTIONS = [
+    "Why does the fourteen minute delivery pull the mean up more than the median?",
+    "If that fourteen became a six, would the mean or the median change more, and why?",
+    "When one value is much larger than the rest, which measure gives a fairer typical value?",
+]
+
+
+def _is_demo_hero(assignment: Assignment) -> bool:
+    """True when this assignment belongs to the prepared hero lesson, whose questions are
+    hardcoded for the demo. Other assignments return False and ask the model instead."""
+    if not assignment.storyboard_id:
+        return False
+    try:
+        storyboard = storage.load_storyboard(assignment.storyboard_id)
+    except FileNotFoundError:
+        return False
+    return subjects.is_hero(storyboard.request)
+
+
 @app.post("/api/submissions/{submission_id}/probe", response_model=Submission)
 def probe_submission(submission_id: str) -> Submission:
     try:
@@ -252,6 +422,14 @@ def probe_submission(submission_id: str) -> Submission:
         assignment = storage.load_assignment(submission.assignment_id)
     except FileNotFoundError as error:
         raise HTTPException(status_code=404, detail="Assignment not found.") from error
+
+    # Demo shortcut: the hero lesson asks fixed questions, so the first one is served
+    # directly — no model call, and no grounding gate, since there is nothing to ground.
+    if _is_demo_hero(assignment):
+        submission.exchanges = [SubmissionExchange(question=HERO_DEMO_QUESTIONS[0])]
+        submission.state = SubmissionState.PROBED
+        storage.save_submission(submission)
+        return submission
 
     try:
         generated = ai.probe_question(assignment, submission)
@@ -302,9 +480,18 @@ def answer_probe(submission_id: str, request: ProbeAnswerRequest) -> Submission:
             submission.exchanges[-1].answer = request.answer
             storage.save_submission(submission)
 
+        if _is_demo_hero(assignment):
+            # Fixed demo questions: hand out the next one until the list is exhausted,
+            # then fall through to marking. No model call decides the follow-up.
+            if len(submission.exchanges) < len(HERO_DEMO_QUESTIONS):
+                submission.exchanges.append(
+                    SubmissionExchange(question=HERO_DEMO_QUESTIONS[len(submission.exchanges)])
+                )
+                storage.save_submission(submission)
+                return submission
         # The hard cap is structural: once the limit is reached the model is never
         # even asked whether it wants another question.
-        if len(submission.exchanges) < settings.assignment_question_limit:
+        elif len(submission.exchanges) < settings.assignment_question_limit:
             try:
                 follow = ai.follow_up_question(assignment, submission)
             except Exception as error:
@@ -345,6 +532,44 @@ def answer_probe(submission_id: str, request: ProbeAnswerRequest) -> Submission:
     return submission
 
 
+def compose_result_speech(evaluation: SubmissionEvaluation) -> str:
+    """A three-sentence spoken result: the score, one strength, one thing to improve.
+
+    The strengths and gaps are already written as full sentences by the marker, so they
+    are spoken as-is rather than slotted into "you did well in …", which would not parse.
+    When either list is empty the model's own comment — a natural two-to-three sentence
+    address to the student — stands in, so the read is always whole sentences.
+    """
+    score = round(evaluation.weighted_score)
+    if evaluation.strengths and evaluation.gaps:
+        return f"You scored {score}. {evaluation.strengths[0]} {evaluation.gaps[0]}"
+    return f"You scored {score}. {evaluation.comment}"
+
+
+@app.get("/api/submissions/{submission_id}/evaluation/audio")
+def get_evaluation_audio(submission_id: str) -> FileResponse:
+    try:
+        submission = storage.load_submission(submission_id)
+    except FileNotFoundError as error:
+        raise HTTPException(status_code=404, detail="Submission not found.") from error
+    if submission.state != SubmissionState.EVALUATED or submission.evaluation is None:
+        raise HTTPException(status_code=409, detail="This submission has not been marked yet.")
+
+    path = storage.evaluation_audio_path(submission_id)
+    if not path.exists():
+        try:
+            audio = narration.speak(
+                compose_result_speech(submission.evaluation),
+                voice_id=settings.probe_voice_id or None,
+            )
+        except Exception as error:
+            # Same as the question audio: the mark is already on screen, so a failed
+            # voice only costs the spoken read, never the result itself.
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        storage.save_evaluation_audio(submission_id, audio)
+    return FileResponse(path, media_type="audio/mpeg", filename="result.mp3")
+
+
 @app.get("/api/submissions/{submission_id}/probe/audio/{index}")
 def get_probe_audio(submission_id: str, index: int) -> FileResponse:
     try:
@@ -369,9 +594,16 @@ def get_probe_audio(submission_id: str, index: int) -> FileResponse:
     return FileResponse(path, media_type="audio/mpeg", filename="question.mp3")
 
 
-#: Short spoken fillers played while the next question or the mark is decided.
-#: The trailing full stops keep the reads short and falling, like real muttering.
-THINKING_LINES = ["Hmm, let me think.", "Mm, right.", "Okay, let me see."]
+#: Short spoken bridges played while the next question is fetched. Ordered by position so
+#: the client picks one that is actually true: variants 0 and 1 are generic "next question"
+#: reads for the earlier gaps, and variant 2 is only played when the upcoming question is
+#: the last one. Nothing here anticipates the mark, so no bridge misleads the student about
+#: what comes next (an earlier "let me see" read implied thinking, not a next question).
+THINKING_LINES = [
+    "Okay, onto the next question.",
+    "Moving on to the next question.",
+    "And the final question is?",
+]
 
 
 @app.get("/api/voice/thinking/{variant}")
@@ -386,5 +618,12 @@ def get_thinking_audio(variant: int) -> FileResponse:
         except Exception as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
         storage.save_thinking_audio(variant, voice, audio)
-    return FileResponse(path, media_type="audio/mpeg", filename="thinking.mp3")
+    # These clips reuse one stable URL per variant, so a browser that cached an older
+    # wording would replay it. no-store keeps the current line authoritative.
+    return FileResponse(
+        path,
+        media_type="audio/mpeg",
+        filename="thinking.mp3",
+        headers={"Cache-Control": "no-store"},
+    )
 
