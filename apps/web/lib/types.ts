@@ -122,6 +122,8 @@ export interface Assignment {
   tasks: AssignmentTask[];
   /** Only the seeded worked example carries one; a real assignment leaves it unset. */
   example_response?: string | null;
+  /** Set on assignments generated with a lesson; unset on the standalone demo. */
+  storyboard_id?: string | null;
 }
 
 /** How every assignment is marked. Configuration, so it arrives beside the list. */
@@ -158,4 +160,15 @@ export interface Submission {
   core_response: string;
   exchanges: SubmissionExchange[];
   evaluation?: SubmissionEvaluation | null;
+}
+
+/** The whole student package for one finished lesson: video, cards, and its assignment. */
+export interface LearningPackage {
+  job_id: string;
+  provenance: "live" | "cached";
+  title: string;
+  learning_objective: string;
+  artifacts: Artifact[];
+  assignment: Assignment;
+  marking: Marking;
 }

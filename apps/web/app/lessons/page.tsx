@@ -215,10 +215,16 @@ export default function LessonsPage() {
     setError(null);
     try {
       const nextJob = await api.approve(storyboard.id);
-      startedAt.current = Date.now();
-      setElapsed(0);
       setJob(nextJob);
-      setStep("render");
+      // A prepared (hero) lesson comes back already rendered, so skip the render step
+      // and its polling and go straight to the finished files.
+      if (nextJob.status === "ready" || nextJob.status === "cached_fallback") {
+        setStep("files");
+      } else {
+        startedAt.current = Date.now();
+        setElapsed(0);
+        setStep("render");
+      }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "The render could not be started.");
     } finally {

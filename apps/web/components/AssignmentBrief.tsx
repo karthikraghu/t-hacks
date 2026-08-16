@@ -17,13 +17,16 @@ export function AssignmentBrief({ assignment }: Props) {
         <p className="u-muted u-spaced">{assignment.brief}</p>
       </div>
 
-      {taskModes.map((mode) => (
-        <div className="section" key={mode}>
-          <p className="u-label">{taskModeLabels[mode]}</p>
-          <div className="task-split">
-            {assignment.tasks
-              .filter((task) => task.mode === mode)
-              .map((task) => (
+      {taskModes.map((mode) => {
+        const rows = assignment.tasks.filter((task) => task.mode === mode);
+        // A generated assignment can be all-core, leaving a mode with no tasks. Skip the
+        // group entirely rather than print a heading over nothing.
+        if (rows.length === 0) return null;
+        return (
+          <div className="section" key={mode}>
+            <p className="u-label">{taskModeLabels[mode]}</p>
+            <div className="task-split">
+              {rows.map((task) => (
                 <div
                   className={mode === "core" ? "task-row is-core" : "task-row"}
                   key={task.description}
@@ -32,9 +35,10 @@ export function AssignmentBrief({ assignment }: Props) {
                   <span className="u-note"> {task.rationale}</span>
                 </div>
               ))}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </section>
   );
 }

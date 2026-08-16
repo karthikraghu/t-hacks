@@ -29,6 +29,8 @@ export const activeStatuses: JobStatus[] = ["narrating", "coding", "rendering", 
 /** Progress, not navigation: neither flow can reopen a step it has left. */
 export const lessonSteps = ["Set up", "Script", "Render", "Files"] as const;
 export const assignmentSteps = ["Work", "Questions", "Mark"] as const;
+/** The student package: the video comes before the same three assignment steps. */
+export const learnSteps = ["Watch", "Work", "Questions", "Mark"] as const;
 
 export const taskModeLabels: Record<TaskMode, string> = {
   ai_assistable: "AI may help",

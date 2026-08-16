@@ -172,11 +172,15 @@ export function ProbeStep({ busy, exchange, index, onAnswer, questionLimit, subm
     setPhase("listening");
   }
 
-  // A quiet spoken "hmm" while the next question or the mark is decided, so the
-  // silence never reads as the app having stopped. Three variants, picked at
-  // random; failure to play is ignored.
+  // A short spoken bridge while the next question is fetched, so the silence never reads
+  // as the app having stopped. The words must not mislead: play nothing before the mark
+  // (this was the last allowed question), the "final question" read only when the next
+  // question is the last, and a plain "next question" read otherwise. Failure to play is
+  // ignored.
   function playThinking() {
-    const variant = Math.floor(Math.random() * 3);
+    if (index + 1 >= questionLimit) return;
+    const nextIsFinal = index + 2 >= questionLimit;
+    const variant = nextIsFinal ? 2 : index % 2;
     const sound = new Audio(api.thinkingAudioUrl(variant));
     sound.volume = 0.55;
     thinkingRef.current = sound;

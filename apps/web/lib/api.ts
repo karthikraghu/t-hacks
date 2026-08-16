@@ -1,5 +1,6 @@
 import type {
   AssignmentsResponse,
+  LearningPackage,
   LessonRequest,
   RenderJob,
   Storyboard,
@@ -8,6 +9,19 @@ import type {
 } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+/** Carries the HTTP status so a caller can tell, e.g., a 409 "still preparing" from a
+    404, without parsing the message. Extends Error, so existing `instanceof Error`
+    handling keeps working unchanged. */
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
@@ -28,7 +42,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     } catch {
       // Keep a non-JSON response as the useful error message.
     }
-    throw new Error(detail || `The request failed (${response.status}).`);
+    throw new ApiError(response.status, detail || `The request failed (${response.status}).`);
   }
   return response.json() as Promise<T>;
 }
@@ -45,6 +59,8 @@ export const api = {
   approve: (storyboardId: string) =>
     request<RenderJob>(`/api/storyboards/${storyboardId}/approve`, { method: "POST" }),
   job: (jobId: string) => request<RenderJob>(`/api/jobs/${jobId}`),
+  learningPackage: (jobId: string) =>
+    request<LearningPackage>(`/api/learning-packages/${jobId}`),
   artifactUrl: (path: string) => `${API_URL}${path}`,
   assignments: () => request<AssignmentsResponse>("/api/assignments"),
   submit: (assignmentId: string, coreResponse: string) =>
@@ -61,5 +77,10 @@ export const api = {
     }),
   probeAudioUrl: (submissionId: string, index: number) =>
     `${API_URL}/api/submissions/${submissionId}/probe/audio/${index}`,
-  thinkingAudioUrl: (variant: number) => `${API_URL}/api/voice/thinking/${variant}`,
+  evaluationAudioUrl: (submissionId: string) =>
+    `${API_URL}/api/submissions/${submissionId}/evaluation/audio`,
+  // The `v` bump busts any clip a browser cached under the old wording: the URL is
+  // otherwise stable, so without it a previously-heard "let me see" replays from cache.
+  // Raise it whenever THINKING_LINES change.
+  thinkingAudioUrl: (variant: number) => `${API_URL}/api/voice/thinking/${variant}?v=2`,
 };

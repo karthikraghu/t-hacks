@@ -1,18 +1,47 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+import { api } from "@/lib/api";
 import type { SubmissionEvaluation } from "@/lib/types";
 
 interface Props {
   evaluation: SubmissionEvaluation;
+  submissionId: string;
 }
 
-export function EvaluationStep({ evaluation }: Props) {
+export function EvaluationStep({ evaluation, submissionId }: Props) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Autoplay after the answer is often allowed, but the wait for marking can consume the
+  // user gesture, so a blocked read falls back to a button — the same pattern as the
+  // spoken questions.
+  const [needsPlay, setNeedsPlay] = useState(false);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.play().catch(() => setNeedsPlay(true));
+    return () => audio.pause();
+  }, []);
+
+  function playAgain() {
+    audioRef.current
+      ?.play()
+      .then(() => setNeedsPlay(false))
+      .catch(() => undefined);
+  }
+
   return (
     <>
       <div className="page-head">
         <p className="u-label">Marked</p>
         <h1 className="u-display">{evaluation.weighted_score}</h1>
+        <button className="btn btn-quiet btn-small u-spaced" onClick={playAgain} type="button">
+          {needsPlay ? "Hear your result" : "Play again"}
+        </button>
       </div>
+
+      {/* preload so the spoken result is ready the moment the mark appears */}
+      <audio preload="auto" ref={audioRef} src={api.evaluationAudioUrl(submissionId)} />
 
       <div className="card">
         <div className="section">
