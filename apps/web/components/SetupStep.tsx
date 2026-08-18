@@ -50,14 +50,6 @@ export function SetupStep({
         <h1 className="u-display" ref={headingRef} tabIndex={-1}>
           What should the video teach?
         </h1>
-        {subtopic?.hero && (
-          <span
-            className="tag tag-marker"
-            title="If live generation is unavailable, a prepared version of this lesson is shown instead."
-          >
-            Prepared example on file
-          </span>
-        )}
       </div>
 
       <div className="card">

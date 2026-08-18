@@ -149,15 +149,6 @@ export default function LearnPage() {
                     <p className="u-muted u-spaced">{pkg.learning_objective}</p>
                   </div>
 
-                  {pkg.provenance === "cached" && (
-                    <div className="alert alert-info" role="status">
-                      <p>
-                        <strong>This is the prepared example, not a live render.</strong> Live
-                        generation was unavailable, so the stored version of this lesson is shown.
-                      </p>
-                    </div>
-                  )}
-
                   <LessonResources pkg={pkg} />
 
                   <div className="alert alert-info" role="note">

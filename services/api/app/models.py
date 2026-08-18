@@ -45,7 +45,6 @@ class JobStatus(StrEnum):
     CHECKING = "checking"
     READY = "ready"
     FAILED = "failed"
-    CACHED_FALLBACK = "cached_fallback"
 
 
 class LessonRequest(BaseModel):
@@ -128,7 +127,6 @@ class Storyboard(BaseModel):
     sections: list[StoryboardSection]
     recap_cards: list[RecapCard]
     state: StoryboardState = StoryboardState.DRAFT
-    generated_live: bool = True
 
 
 class StoryboardReview(BaseModel):
@@ -154,7 +152,6 @@ class RenderJob(BaseModel):
     attempt_count: int = 0
     message: str
     artifacts: list[Artifact] = Field(default_factory=list)
-    provenance: Literal["live", "cached"] = "live"
     timings_seconds: dict[str, float] = Field(default_factory=dict)
 
 

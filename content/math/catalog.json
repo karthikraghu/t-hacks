@@ -350,8 +350,7 @@
               "misconceptions": [
                 "The median is read off without ordering the data first.",
                 "Mean and median are expected to always coincide."
-              ],
-              "hero": true
+              ]
             },
             {
               "id": "constructing-triangles",

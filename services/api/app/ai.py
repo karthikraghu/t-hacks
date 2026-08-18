@@ -85,15 +85,8 @@ class AIService:
         request: LessonRequest,
         topic: dict[str, Any],
         subtopic: dict[str, Any],
-        *,
-        permit_hero_draft: bool,
-    ) -> tuple[GeneratedStoryboard, bool]:
+    ) -> GeneratedStoryboard:
         pack = self.subjects.pack(request.subject_id)
-        # Hardcoded instant demo path: a hero subtopic always serves its prepared
-        # storyboard with no live model call, so the demo is deterministic and fast and
-        # the script matches the pre-rendered fallback video exactly.
-        if permit_hero_draft:
-            return pack.hero_storyboard(request), False
         if not self.settings.model_is_configured:
             raise ModelNotConfigured("This topic requires a configured model.")
 
@@ -116,9 +109,9 @@ class AIService:
             ]
         )
         if review.approved:
-            return generated, True
+            return generated
         if review.corrected_storyboard:
-            return review.corrected_storyboard, True
+            return review.corrected_storyboard
         raise RuntimeError("The internal subject review rejected the draft: " + "; ".join(review.issues))
 
     def revise_section(self, storyboard: Storyboard, section_id: str, comment: str) -> GeneratedSection:

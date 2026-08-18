@@ -168,7 +168,7 @@ Rules for layout C:
 
 ## Subject structure
 
-- One shared `create_axes()` factory for the video and the cards. For the motion hero use
+- One shared `create_axes()` factory for the video and the cards. For a motion lesson use
   `x_range=[0, 6, 1]` (time in s), `y_range=[0, 12, 2]` (distance in m), `x_length` about 7.2 and
   `y_length` about 5.0.
 - Animate a moving point on a motion graph with `ValueTracker` and `always_redraw`.

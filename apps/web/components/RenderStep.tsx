@@ -41,7 +41,7 @@ export function RenderStep({ elapsedSeconds, headingRef, job, onStartOver, story
           {renderStages.map((stage, index) => {
             let state = "";
             if (failed && index === Math.max(currentIndex, 0)) state = " is-failed";
-            else if (job.status === "ready" || job.status === "cached_fallback") state = " is-done";
+            else if (job.status === "ready") state = " is-done";
             else if (currentIndex > index) state = " is-done";
             else if (currentIndex === index) state = " is-live";
             return (

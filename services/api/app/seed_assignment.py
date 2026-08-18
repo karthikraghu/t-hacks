@@ -1,6 +1,6 @@
-"""A worked example assignment, so the feature is demoable with no model configured.
+"""A worked example assignment, so the assignments list is never empty on a fresh machine.
 
-The same reason `hero.py` exists. The split here is deliberately unarguable:
+The split here is deliberately unarguable:
 computing an average is arithmetic a machine should do, and deciding *which*
 average represents the data fairly is the judgement the assignment is about.
 """

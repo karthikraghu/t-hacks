@@ -117,6 +117,6 @@ Rules for layout B:
 
 ## Subject structure
 
-- One shared `create_axes()` factory for the video and the cards. For the slope hero use
+- One shared `create_axes()` factory for the video and the cards. For a slope lesson use
   `x_range=[0, 6, 1]`, `y_range=[0, 12, 2]`, `x_length` about 7.2 and `y_length` about 5.0.
 - Animate the slope point and slope triangle with `ValueTracker` and `always_redraw`.

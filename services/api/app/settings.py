@@ -25,8 +25,6 @@ class Settings(BaseSettings):
     # Every directory under here with a pack.json is a subject pack.
     content_root: Path = REPO_ROOT / "content"
     prompt_root: Path = REPO_ROOT / "prompts"
-    fallback_root: Path = REPO_ROOT / "fallback"
-    allow_hero_fallback: bool = True
     # Fast-output defaults: deterministic validation/render failures may be repaired
     # once, while subjective visual-review findings are recorded without forcing a
     # full rerender. Set VISUAL_REVIEW_BLOCKING=true for stricter production output.
@@ -37,9 +35,8 @@ class Settings(BaseSettings):
     # sections gives the arc room: hook, build, formalise, worked example, closure.
     lesson_target_sections: int = 5
     lesson_target_seconds: int = 105
-    # Accepted range when validating any storyboard. Wider than the target on both sides:
-    # the floor keeps the bundled hero examples valid, and the ceiling leaves tolerance
-    # above 120 so a slightly long draft is not rejected after a paid model call.
+    # Accepted range when validating any storyboard. Wider than the target on both sides,
+    # so a slightly short or long draft is not rejected after a paid model call.
     lesson_min_sections: int = 2
     lesson_max_sections: int = 6
     lesson_min_seconds: int = 25

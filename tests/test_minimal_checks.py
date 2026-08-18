@@ -9,6 +9,7 @@ from uuid import uuid4
 from services.api.app import main
 from services.api.app.models import (
     GeneratedSection,
+    GeneratedStoryboard,
     JobStatus,
     LessonRequest,
     RenderJob,
@@ -24,8 +25,11 @@ from services.api.app.pipeline import GenerationPipeline
 from services.api.app.rendering import LocalRenderer
 from services.api.app.settings import REPO_ROOT, Settings
 from services.api.app.storage import Storage
-from services.api.app.subjects import SubjectRegistry
 from services.api.app.validation import validate_manim_source
+
+#: A realistic five-section lesson (Manim source plus its storyboard), kept as test
+#: fixtures so the pipeline and renderer tests run against real shapes without a model.
+FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 
 class SuccessfulNarration:
@@ -49,7 +53,7 @@ class FakeAI:
         self.repair_calls = 0
 
     def generate_code(self, storyboard: Storyboard, section_durations: list[float]) -> str:
-        return (REPO_ROOT / "fallback" / "math" / "hero_lesson.py").read_text(encoding="utf-8")
+        return (FIXTURES / "sample_lesson.py").read_text(encoding="utf-8")
 
     def review_frames(self, storyboard: Storyboard, frame_paths: list[Path]) -> VisualReview:
         return VisualReview(approved=self.preview_approved, issues=[] if self.preview_approved else ["Vorschau fehlerhaft"])
@@ -117,14 +121,10 @@ class MinimalHackathonChecks(unittest.TestCase):
             artifact_root=root / "runtime",
             content_root=REPO_ROOT / "content",
             prompt_root=REPO_ROOT / "prompts",
-            fallback_root=root / "fallback",
             manim_command="manim",
             ffmpeg_command="ffmpeg",
         )
         self.storage = Storage(self.settings.artifact_root)
-        self.subjects = SubjectRegistry(self.settings.content_root)
-        # The math hero — the prepared lesson whose storyboard and fallback bundle ship
-        # with the pack. It is what is_hero() must return True for.
         self.request = LessonRequest(
             grade=7,
             topic_id="data-and-constructions",
@@ -132,7 +132,9 @@ class MinimalHackathonChecks(unittest.TestCase):
             level="standard",
             method="worked_example",
         )
-        generated = self.subjects.pack("math").hero_storyboard(self.request)
+        generated = GeneratedStoryboard.model_validate_json(
+            (FIXTURES / "sample_storyboard.json").read_text(encoding="utf-8")
+        )
         self.storyboard = Storyboard(
             id=uuid4().hex,
             request=self.request,
@@ -142,7 +144,6 @@ class MinimalHackathonChecks(unittest.TestCase):
             sections=[StoryboardSection(id=uuid4().hex, **section.model_dump()) for section in generated.sections],
             recap_cards=generated.recap_cards,
             state=StoryboardState.DRAFT,
-            generated_live=False,
         )
         self.storage.save_storyboard(self.storyboard)
 
@@ -159,7 +160,7 @@ class MinimalHackathonChecks(unittest.TestCase):
         self.storage.save_job(job)
         return job
 
-    def test_hero_storyboard_revision_and_artifact_contract(self) -> None:
+    def test_storyboard_revision_and_artifact_contract(self) -> None:
         original_ids = [section.id for section in self.storyboard.sections]
         target = self.storyboard.sections[1]
         revised = GeneratedSection(**{**target.model_dump(exclude={"id"}), "title": "Revised on purpose"})
@@ -183,7 +184,6 @@ class MinimalHackathonChecks(unittest.TestCase):
         pipeline = GenerationPipeline(
             self.settings,
             self.storage,
-            self.subjects,
             FakeAI(),
             SuccessfulNarration(),
             SuccessfulRenderer(self.storage),
@@ -204,7 +204,7 @@ class MinimalHackathonChecks(unittest.TestCase):
         job_id = "renderer-optimizations"
         job_dir = self.storage.job_dir(job_id)
         code_path = job_dir / "lesson.py"
-        code_path.write_text((REPO_ROOT / "fallback" / "math" / "hero_lesson.py").read_text(encoding="utf-8"), encoding="utf-8")
+        code_path.write_text((FIXTURES / "sample_lesson.py").read_text(encoding="utf-8"), encoding="utf-8")
 
         preview_media = job_dir / "preview_media"
         preview_media.mkdir()
@@ -309,7 +309,6 @@ class RecapCard3(Scene): pass
         self.assertNotIn("OPENAI_API_KEY", environment)
         self.assertNotIn(secret, environment.values())
 
-        self.settings.allow_hero_fallback = False
         self.storyboard.state = StoryboardState.APPROVED
         self.storage.save_storyboard(self.storyboard)
         job = self._job()
@@ -317,7 +316,6 @@ class RecapCard3(Scene): pass
         pipeline = GenerationPipeline(
             self.settings,
             self.storage,
-            self.subjects,
             ai,
             SuccessfulNarration(),
             FailingRenderer(secret),
@@ -329,7 +327,6 @@ class RecapCard3(Scene): pass
         self.assertNotIn(secret, failed.message)
 
     def test_visual_review_is_advisory_in_fast_output_mode(self) -> None:
-        self.settings.allow_hero_fallback = False
         self.settings.visual_review_blocking = False
         self.storyboard.state = StoryboardState.APPROVED
         self.storage.save_storyboard(self.storyboard)
@@ -338,7 +335,6 @@ class RecapCard3(Scene): pass
         pipeline = GenerationPipeline(
             self.settings,
             self.storage,
-            self.subjects,
             ai,
             SuccessfulNarration(),
             SuccessfulRenderer(self.storage),
@@ -385,29 +381,22 @@ class RecapCard3(Scene): pass
         self.assertTrue(any("caption band" in issue for issue in issues))
         self.assertTrue(any("section_1" in issue for issue in issues))
 
-    def test_cached_hero_fallback_is_labeled(self) -> None:
-        fallback_dir = self.settings.fallback_root / "math"
-        fallback_dir.mkdir(parents=True)
-        for name in ["lesson.mp4", "recap_1.png", "recap_2.png", "recap_3.png"]:
-            (fallback_dir / name).write_bytes(name.encode("ascii"))
-
+    def test_failed_generation_is_reported_honestly(self) -> None:
         self.storyboard.state = StoryboardState.APPROVED
         self.storage.save_storyboard(self.storyboard)
         job = self._job()
         pipeline = GenerationPipeline(
             self.settings,
             self.storage,
-            self.subjects,
             FakeAI(),
             FailingNarration(),
             SuccessfulRenderer(self.storage),
         )
         pipeline.run(job.id)
-        cached = self.storage.load_job(job.id)
-        self.assertEqual(JobStatus.CACHED_FALLBACK, cached.status)
-        self.assertEqual("cached", cached.provenance)
-        self.assertEqual(4, len(cached.artifacts))
-        self.assertIn("prepared demo example", cached.message)
+        failed = self.storage.load_job(job.id)
+        self.assertEqual(JobStatus.FAILED, failed.status)
+        self.assertEqual([], failed.artifacts)
+        self.assertIn("Generation failed", failed.message)
 
 
 if __name__ == "__main__":

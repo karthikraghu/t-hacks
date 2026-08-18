@@ -1,5 +1,4 @@
 import json
-import shutil
 from pathlib import Path
 from threading import Lock
 from typing import TypeVar
@@ -56,28 +55,6 @@ class Storage:
         path = self.jobs / job_id
         path.mkdir(parents=True, exist_ok=True)
         return path
-
-    def copy_fallback(self, fallback_root: Path, job_id: str) -> list[Path]:
-        target = self.job_dir(job_id) / "final"
-        target.mkdir(parents=True, exist_ok=True)
-        required = ["lesson.mp4", "recap_1.png", "recap_2.png", "recap_3.png"]
-        copied: list[Path] = []
-        for name in required:
-            source = fallback_root / name
-            if not source.exists():
-                raise FileNotFoundError(f"Fallback artifact is missing: {name}")
-            destination = target / name
-            shutil.copy2(source, destination)
-            copied.append(destination)
-        return copied
-
-    def cache_fallback(self, fallback_root: Path, job_id: str) -> None:
-        source = self.job_dir(job_id) / "final"
-        fallback_root.mkdir(parents=True, exist_ok=True)
-        for name in ["lesson.mp4", "recap_1.png", "recap_2.png", "recap_3.png"]:
-            artifact = source / name
-            if artifact.exists():
-                shutil.copy2(artifact, fallback_root / name)
 
     def save_assignment(self, assignment: Assignment) -> None:
         with self._lock:

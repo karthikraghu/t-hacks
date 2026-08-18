@@ -11,7 +11,6 @@ from .narration import ElevenLabsNarration
 from .rendering import LocalRenderer
 from .settings import Settings
 from .storage import Storage
-from .subjects import SubjectRegistry
 
 
 class GenerationPipeline:
@@ -19,22 +18,16 @@ class GenerationPipeline:
         self,
         settings: Settings,
         storage: Storage,
-        subjects: SubjectRegistry,
         ai: AIService,
         narration: ElevenLabsNarration,
         renderer: LocalRenderer,
     ) -> None:
         self.settings = settings
         self.storage = storage
-        self.subjects = subjects
         self.ai = ai
         self.narration = narration
         self.renderer = renderer
         self._single_job = Semaphore(1)
-
-    def _fallback_dir(self, storyboard: Storyboard):  # type: ignore[no-untyped-def]
-        """Each subject carries its own rendered hero bundle."""
-        return self.settings.fallback_root / storyboard.request.subject_id
 
     def _update(self, job: RenderJob, status: JobStatus, message: str) -> None:
         job.status = status
@@ -58,7 +51,7 @@ class GenerationPipeline:
             try:
                 self._run_live(job, storyboard)
             except Exception as error:  # background boundary: convert to safe job state
-                self._fallback_or_fail(job, storyboard, error)
+                self._fail(job, error)
             finally:
                 job.timings_seconds["total"] = round(perf_counter() - started_at, 3)
                 self.storage.save_job(job)
@@ -143,19 +136,9 @@ class GenerationPipeline:
                 for index in range(1, 4)
             ],
         ]
-        job.provenance = "live"
         self._update(job, JobStatus.READY, "The video and recap cards are ready.")
 
-        # Only seed the fallback when it is missing. The bundled hero is the deliberately
-        # polished render from the pack's fallback bundle; overwriting it with whatever the
-        # last live run happened to produce would quietly degrade the demo safety net.
-        if self.subjects.is_hero(storyboard.request):
-            fallback_dir = self._fallback_dir(storyboard)
-            bundle = ["lesson.mp4", "recap_1.png", "recap_2.png", "recap_3.png"]
-            if not all((fallback_dir / name).exists() for name in bundle):
-                self.storage.cache_fallback(fallback_dir, job.id)
-
-    def _fallback_or_fail(self, job: RenderJob, storyboard: Storyboard, error: Exception) -> None:
+    def _fail(self, job: RenderJob, error: Exception) -> None:
         safe_error = str(error)
         for secret in [
             self.settings.openai_api_key,
@@ -164,26 +147,5 @@ class GenerationPipeline:
         ]:
             if secret:
                 safe_error = safe_error.replace(secret, "[secret]")
-        if self.settings.allow_hero_fallback and self.subjects.is_hero(storyboard.request):
-            try:
-                self.storage.copy_fallback(self._fallback_dir(storyboard), job.id)
-                job.artifacts = [
-                    Artifact(name="lesson.mp4", kind="video", url=f"/api/jobs/{job.id}/artifacts/lesson.mp4"),
-                    *[
-                        Artifact(name=f"recap_{index}.png", kind="card", url=f"/api/jobs/{job.id}/artifacts/recap_{index}.png")
-                        for index in range(1, 4)
-                    ],
-                ]
-                job.provenance = "cached"
-                self._update(
-                    job,
-                    JobStatus.CACHED_FALLBACK,
-                    "Live generation was unavailable, so a prepared demo example is shown instead.",
-                )
-                return
-            except FileNotFoundError:
-                pass
-
-        job.provenance = "live"
         concise_error = safe_error if len(safe_error) <= 1200 else "…" + safe_error[-1199:]
         self._update(job, JobStatus.FAILED, f"Generation failed: {concise_error}")

@@ -1,52 +1,90 @@
-# AI Micro-Lesson Studio
+# Klarblick
 
-Local hackathon application for mathematics teachers at a German Gymnasium. A teacher configures a micro-lesson, reviews the AI storyboard, and generates a narrated Manim video plus three recap cards. The interface and the generated lessons are in English.
+AI micro-lesson studio for teachers. A teacher picks a grade, topic, and subtopic; an AI plans a
+storyboard the teacher can review and revise scene by scene; on approval the app generates a
+narrated Manim video (720p, burned-in captions), three recap cards, and an assignment. The finished
+lesson is published as a student package under a shareable link, where the student watches the
+video, submits written work, answers spoken follow-up questions grounded in their own writing, and
+receives a mark.
 
-See [docs/SETUP.md](docs/SETUP.md) for a one-page map of the pieces and the end-to-end flow.
+Subjects are data packs (`content/math`, `content/physics`) — catalogue plus prompt prose — so a new
+subject needs no pipeline changes.
 
-## Start locally
+## Architecture
 
-1. Copy `.env.example` to `.env`.
-2. Set `MODEL_NAME`, the API key for the selected model provider, `ELEVENLABS_API_KEY`, and `ELEVENLABS_VOICE_ID`.
-3. Install `uv`, Node.js 22+, and MiKTeX on the demo laptop.
-4. From the repository root, create the local Python environment and install dependencies:
+Two local processes, no database — job state is JSON files under `jobs/`:
 
-   ```powershell
-   uv python install 3.12 --no-registry --no-bin
-   uv venv --python 3.12 .venv
-   uv pip install --python .venv\Scripts\python.exe -r services\api\requirements.txt
-   npm install --prefix apps\web
-   ```
+| Process | Location | Port |
+| --- | --- | --- |
+| Web UI (Next.js) | `apps/web` | 3000 |
+| API (FastAPI) | `services/api` | 8000 |
 
-5. Run `./scripts/check-prereqs.ps1` and allow MiKTeX to finish its first-run setup.
-6. In one terminal run `./scripts/start-api.ps1`.
-7. In another terminal run `./scripts/start-web.ps1`.
-8. Open `http://localhost:3000`.
+The generation pipeline (`services/api/app/pipeline.py`) runs in the background after approval:
 
-The frontend runs on port 3000 and the FastAPI service on port 8000. Manim runs as a local subprocess after AST validation. The subprocess receives a sanitized environment without model or ElevenLabs credentials.
-
-Before the paid visual review runs, the preview render passes two deterministic gates. One compares the
-animation length with the narration length so picture and speech cannot drift apart; the other extracts
-one frame per lesson section and rejects any frame whose outer two percent contains lesson content, so
-content cut off at a frame edge never depends on a model judgement. The lower band of the frame
-(`y = -4.0` to `-3.0`) is kept clear for the captions FFmpeg burns in afterwards.
-
-Docker is intentionally not required for the hackathon MVP. Run the four focused checks with:
-
-```powershell
-.\.venv\Scripts\python.exe -m unittest tests.test_minimal_checks -v
+```
+POST /api/storyboards            model plans the storyboard + assignment, a second call reviews it
+POST .../sections/{id}/revise    regenerate exactly one section from a teacher comment
+POST .../approve                 start the render job, then:
+  1. narrate   ElevenLabs with timestamps -> narration.mp3, captions.srt, section durations
+  2. code      model writes one Manim scene file -> lesson.py
+  3. check     AST validation, fast preview, sync gate, frame-bounds gate, visual review
+               (deterministic failures get one repair attempt)
+  4. final     720p Manim render, three recap cards, FFmpeg mux with burned captions
+GET  /api/jobs/{id}              job status, artifacts, timings
+GET  /api/learning-packages/{id} the student package: video, cards, assignment, marking rules
 ```
 
-After selecting the ElevenLabs voice, build the polished cached hero bundle once:
+Manim runs as a local subprocess after AST validation, with a sanitized environment that carries no
+model or ElevenLabs credentials. Two deterministic gates run before the paid visual review: one
+compares animation length against narration length, the other rejects frames whose outer edge
+contains lesson content. The lower caption band (`y = -4.0` to `-3.0`) is kept clear for FFmpeg.
+
+Key modules:
+
+| Concern | File |
+| --- | --- |
+| Routes and job endpoints | `services/api/app/main.py` |
+| Pipeline orchestration and repair loop | `services/api/app/pipeline.py` |
+| Manim subprocess, gates, frame sampling | `services/api/app/rendering.py` |
+| AST and API safety rules | `services/api/app/validation.py` |
+| Model calls (storyboard, code, review, probing, marking) | `services/api/app/ai.py` |
+| Subject packs | `services/api/app/subjects.py`, `content/<subject>/` |
+| Prompts, one per task | `prompts/*.md` |
+
+## Setup
+
+Requirements: [uv](https://docs.astral.sh/uv/), Node.js 22+, and MiKTeX (LaTeX).
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\build_hero_fallback.py
+# 1. Configuration
+Copy-Item .env.example .env
+# then set MODEL_NAME, the matching provider API key, ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID
+
+# 2. Dependencies
+uv python install 3.12
+uv venv --python 3.12 .venv
+uv pip install --python .venv\Scripts\python.exe -r services\api\requirements.txt
+npm install --prefix apps\web
+
+# 3. Verify the toolchain (Node, Manim, LaTeX)
+./scripts/check-prereqs.ps1
 ```
 
-Run the single paid end-to-end smoke path only when both providers are configured:
+## Run
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\run_live_smoke.py
+./scripts/start-api.ps1   # terminal 1 — FastAPI on :8000
+./scripts/start-web.ps1   # terminal 2 — Next.js on :3000
 ```
 
-See [docs/plan.md](docs/plan.md) for the agreed scope and sprint plan.
+Open `http://localhost:3000`.
+
+## Checks
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest tests.test_minimal_checks tests.test_assignment_flow -v  # free, seconds
+npm run typecheck --prefix apps\web                                                             # free
+.\.venv\Scripts\python.exe scripts\run_live_smoke.py   # paid end-to-end render, needs both providers configured
+```
+
+When a live run fails, `jobs/jobs/<job-id>/attempts.log` records what each attempt was rejected for.

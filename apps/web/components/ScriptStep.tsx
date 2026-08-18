@@ -69,7 +69,6 @@ export function ScriptStep({
         <div className="page-head-meta">
           <span className="tag u-mono">{storyboard.sections.length} scenes</span>
           <span className="tag tag-pen u-mono">{timecode(total)}</span>
-          {!storyboard.generated_live && <span className="tag tag-marker">Prepared example</span>}
         </div>
       </div>
 

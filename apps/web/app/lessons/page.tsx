@@ -32,22 +32,8 @@ function fromSubtopic(subtopic: Subtopic) {
   } satisfies Partial<LessonRequest>;
 }
 
-/** The subject's hero subtopic if its catalogue marks one, otherwise its first entry. */
+/** The subject's first catalogue entry, so the form always opens filled in. */
 function openingSelection(subject: Subject): LessonRequest | null {
-  for (const grade of subject.catalog.grades) {
-    for (const topic of grade.topics) {
-      const hero = topic.subtopics.find((entry) => entry.hero);
-      if (hero) {
-        return {
-          subject_id: subject.id,
-          grade: grade.grade,
-          topic_id: topic.id,
-          level: "standard",
-          ...fromSubtopic(hero),
-        };
-      }
-    }
-  }
   const grade = subject.catalog.grades[0];
   const topic = grade?.topics[0];
   const subtopic = topic?.subtopics[0];
@@ -76,8 +62,8 @@ export default function LessonsPage() {
   const headingRef = useRef<HTMLHeadingElement | null>(null);
   const startedAt = useRef<number>(0);
 
-  // The catalogue chooses what opens: the first subject's hero subtopic, or its first
-  // entry. Nothing here names a subject, grade or id, so the two cannot drift apart.
+  // The catalogue chooses what opens: the first subject's first entry. Nothing here
+  // names a subject, grade or id, so the two cannot drift apart.
   useEffect(() => {
     api
       .subjects()
@@ -102,7 +88,7 @@ export default function LessonsPage() {
       try {
         const current = await api.job(jobId);
         setJob(current);
-        if (current.status === "ready" || current.status === "cached_fallback") setStep("files");
+        if (current.status === "ready") setStep("files");
         if (current.status === "failed") setError(null);
       } catch (reason) {
         setError(reason instanceof Error ? reason.message : "The render status could not be read.");
@@ -216,15 +202,9 @@ export default function LessonsPage() {
     try {
       const nextJob = await api.approve(storyboard.id);
       setJob(nextJob);
-      // A prepared (hero) lesson comes back already rendered, so skip the render step
-      // and its polling and go straight to the finished files.
-      if (nextJob.status === "ready" || nextJob.status === "cached_fallback") {
-        setStep("files");
-      } else {
-        startedAt.current = Date.now();
-        setElapsed(0);
-        setStep("render");
-      }
+      startedAt.current = Date.now();
+      setElapsed(0);
+      setStep("render");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "The render could not be started.");
     } finally {

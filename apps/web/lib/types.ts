@@ -4,7 +4,6 @@ export type Method = "auto" | "visual_linking" | "worked_example" | "error_analy
 export interface Subtopic {
   id: string;
   label: string;
-  hero?: boolean;
   default_method?: Method;
   learning_goal?: string;
   misconceptions?: string[];
@@ -75,7 +74,6 @@ export interface Storyboard {
   sections: StoryboardSection[];
   recap_cards: RecapCard[];
   state: "draft" | "approved";
-  generated_live: boolean;
 }
 
 export type JobStatus =
@@ -86,8 +84,7 @@ export type JobStatus =
   | "rendering"
   | "checking"
   | "ready"
-  | "failed"
-  | "cached_fallback";
+  | "failed";
 
 export interface Artifact {
   name: string;
@@ -102,7 +99,6 @@ export interface RenderJob {
   attempt_count: number;
   message: string;
   artifacts: Artifact[];
-  provenance: "live" | "cached";
   timings_seconds: Record<string, number>;
 }
 
@@ -165,7 +161,6 @@ export interface Submission {
 /** The whole student package for one finished lesson: video, cards, and its assignment. */
 export interface LearningPackage {
   job_id: string;
-  provenance: "live" | "cached";
   title: string;
   learning_objective: string;
   artifacts: Artifact[];

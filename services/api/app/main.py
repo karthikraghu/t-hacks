@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import time
 from uuid import uuid4
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException
@@ -9,7 +8,6 @@ from fastapi.responses import FileResponse
 
 from .ai import AIService, ModelNotConfigured
 from .models import (
-    Artifact,
     Assignment,
     AssignmentTask,
     JobStatus,
@@ -42,7 +40,7 @@ subjects = SubjectRegistry(settings.content_root)
 ai = AIService(settings, subjects)
 narration = ElevenLabsNarration(settings)
 renderer = LocalRenderer(settings)
-pipeline = GenerationPipeline(settings, storage, subjects, ai, narration, renderer)
+pipeline = GenerationPipeline(settings, storage, ai, narration, renderer)
 
 # The worked example is rewritten at import, so the assignment list is never empty on a
 # fresh machine and an older stored copy picks up edits to the seed. It holds no user
@@ -97,12 +95,7 @@ def get_catalog() -> dict[str, object]:
 def create_storyboard(request: LessonRequest) -> Storyboard:
     try:
         _, topic, subtopic = subjects.resolve(request)
-        generated, generated_live = ai.create_storyboard(
-            request,
-            topic,
-            subtopic,
-            permit_hero_draft=subjects.is_hero(request) and settings.allow_hero_fallback,
-        )
+        generated = ai.create_storyboard(request, topic, subtopic)
     except (ValueError, ModelNotConfigured, RuntimeError) as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
 
@@ -148,7 +141,6 @@ def create_storyboard(request: LessonRequest) -> Storyboard:
         ],
         recap_cards=generated.recap_cards,
         state=StoryboardState.DRAFT,
-        generated_live=generated_live,
     )
     storage.save_storyboard(storyboard)
 
@@ -189,55 +181,6 @@ def revise_section(storyboard_id: str, section_id: str, request: SectionRevision
     return storyboard
 
 
-#: How long each render stage lingers in the hero demo. The progress page is shown in
-#: full, but the whole thing finishes in about ten seconds instead of two minutes.
-_HERO_STAGE_PLAN = [
-    (JobStatus.NARRATING, "Recording the narration for the approved script.", 2.2),
-    (JobStatus.CODING, "Translating the approved storyboard into Manim code.", 2.2),
-    (JobStatus.RENDERING, "Rendering the lesson video and recap cards.", 3.0),
-    (JobStatus.CHECKING, "Checking the frames for visible problems.", 2.2),
-]
-
-
-def _hero_artifacts(job_id: str) -> list[Artifact]:
-    return [
-        Artifact(name="lesson.mp4", kind="video", url=f"/api/jobs/{job_id}/artifacts/lesson.mp4"),
-        *[
-            Artifact(
-                name=f"recap_{index}.png",
-                kind="card",
-                url=f"/api/jobs/{job_id}/artifacts/recap_{index}.png",
-            )
-            for index in range(1, 4)
-        ],
-    ]
-
-
-def _simulate_hero_render(job_id: str) -> None:
-    """Play the render stages quickly for the prepared hero lesson, then serve its bundle.
-
-    The demo sees the same progress page as a real render, but in seconds rather than
-    minutes. The generation pipeline is not involved; if anything fails the job just stops.
-    """
-    try:
-        job = storage.load_job(job_id)
-        storyboard = storage.load_storyboard(job.storyboard_id)
-        fallback_dir = settings.fallback_root / storyboard.request.subject_id
-        for status, message, delay in _HERO_STAGE_PLAN:
-            job.status = status
-            job.message = message
-            storage.save_job(job)
-            time.sleep(delay)
-        storage.copy_fallback(fallback_dir, job.id)
-        job.status = JobStatus.READY
-        job.provenance = "live"
-        job.message = "The video and recap cards are ready."
-        job.artifacts = _hero_artifacts(job.id)
-        storage.save_job(job)
-    except Exception:
-        pass
-
-
 @app.post("/api/storyboards/{storyboard_id}/approve", response_model=RenderJob)
 def approve_storyboard(storyboard_id: str, background_tasks: BackgroundTasks) -> RenderJob:
     try:
@@ -255,16 +198,6 @@ def approve_storyboard(storyboard_id: str, background_tasks: BackgroundTasks) ->
         status=JobStatus.NARRATING,
         message="Generation has started.",
     )
-
-    # Hardcoded demo path: the hero lesson plays the render stages quickly (about ten
-    # seconds) and then serves its prepared bundle, so the progress page is shown in full
-    # but the wait is short. Falls through to the real pipeline if the bundle is missing.
-    fallback_video = settings.fallback_root / storyboard.request.subject_id / "lesson.mp4"
-    if subjects.is_hero(storyboard.request) and settings.allow_hero_fallback and fallback_video.exists():
-        storage.save_job(job)
-        background_tasks.add_task(_simulate_hero_render, job.id)
-        return job
-
     storage.save_job(job)
     background_tasks.add_task(pipeline.run, job.id)
     return job
@@ -302,7 +235,7 @@ def get_learning_package(job_id: str) -> dict[str, object]:
         raise HTTPException(status_code=404, detail="Learning package not found.") from error
     # Only publishable once the render has actually produced its files. Anything earlier
     # (or a failed render) reads to the student as "still being prepared".
-    if job.status not in (JobStatus.READY, JobStatus.CACHED_FALLBACK):
+    if job.status != JobStatus.READY:
         raise HTTPException(
             status_code=409,
             detail="This lesson is still being prepared. Please come back shortly.",
@@ -322,7 +255,6 @@ def get_learning_package(job_id: str) -> dict[str, object]:
         ) from error
     return {
         "job_id": job.id,
-        "provenance": job.provenance,
         "title": storyboard.title,
         "learning_objective": storyboard.learning_objective,
         "artifacts": [artifact.model_dump() for artifact in job.artifacts],
@@ -383,30 +315,6 @@ def create_submission(assignment_id: str, request: SubmissionRequest) -> Submiss
     return submission
 
 
-# Fixed spoken questions for the mean-and-median demo lesson, so the presenter knows
-# exactly what will be asked and can prepare answers. Used only when the submission's
-# assignment belongs to the hero lesson; every other assignment still asks live,
-# model-generated questions grounded in the student's own writing. The list length is the
-# question count for the demo (kept equal to assignment_question_limit).
-HERO_DEMO_QUESTIONS = [
-    "Why does the fourteen minute delivery pull the mean up more than the median?",
-    "If that fourteen became a six, would the mean or the median change more, and why?",
-    "When one value is much larger than the rest, which measure gives a fairer typical value?",
-]
-
-
-def _is_demo_hero(assignment: Assignment) -> bool:
-    """True when this assignment belongs to the prepared hero lesson, whose questions are
-    hardcoded for the demo. Other assignments return False and ask the model instead."""
-    if not assignment.storyboard_id:
-        return False
-    try:
-        storyboard = storage.load_storyboard(assignment.storyboard_id)
-    except FileNotFoundError:
-        return False
-    return subjects.is_hero(storyboard.request)
-
-
 @app.post("/api/submissions/{submission_id}/probe", response_model=Submission)
 def probe_submission(submission_id: str) -> Submission:
     try:
@@ -422,14 +330,6 @@ def probe_submission(submission_id: str) -> Submission:
         assignment = storage.load_assignment(submission.assignment_id)
     except FileNotFoundError as error:
         raise HTTPException(status_code=404, detail="Assignment not found.") from error
-
-    # Demo shortcut: the hero lesson asks fixed questions, so the first one is served
-    # directly — no model call, and no grounding gate, since there is nothing to ground.
-    if _is_demo_hero(assignment):
-        submission.exchanges = [SubmissionExchange(question=HERO_DEMO_QUESTIONS[0])]
-        submission.state = SubmissionState.PROBED
-        storage.save_submission(submission)
-        return submission
 
     try:
         generated = ai.probe_question(assignment, submission)
@@ -480,18 +380,9 @@ def answer_probe(submission_id: str, request: ProbeAnswerRequest) -> Submission:
             submission.exchanges[-1].answer = request.answer
             storage.save_submission(submission)
 
-        if _is_demo_hero(assignment):
-            # Fixed demo questions: hand out the next one until the list is exhausted,
-            # then fall through to marking. No model call decides the follow-up.
-            if len(submission.exchanges) < len(HERO_DEMO_QUESTIONS):
-                submission.exchanges.append(
-                    SubmissionExchange(question=HERO_DEMO_QUESTIONS[len(submission.exchanges)])
-                )
-                storage.save_submission(submission)
-                return submission
         # The hard cap is structural: once the limit is reached the model is never
         # even asked whether it wants another question.
-        elif len(submission.exchanges) < settings.assignment_question_limit:
+        if len(submission.exchanges) < settings.assignment_question_limit:
             try:
                 follow = ai.follow_up_question(assignment, submission)
             except Exception as error:

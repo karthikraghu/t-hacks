@@ -1,9 +1,8 @@
 """Subject packs: everything one subject contributes, loaded from content/<subject>/.
 
-A pack is data only — catalogue, prose, and a hero storyboard as JSON validated through
-the same Pydantic models. Deliberately no Python and no influence over the validator's
-import allowlist: widening `ALLOWED_IMPORT_ROOTS` stays a code change a human reads,
-or adding a subject becomes an escalation path into the render subprocess.
+A pack is data only — catalogue and prose. Deliberately no Python and no influence over
+the validator's import allowlist: widening `ALLOWED_IMPORT_ROOTS` stays a code change a
+human reads, or adding a subject becomes an escalation path into the render subprocess.
 """
 
 from __future__ import annotations
@@ -12,7 +11,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .models import GeneratedStoryboard, LessonRequest
+from .models import LessonRequest
 
 #: The heading that separates the planner-facing half of layouts.md from the
 #: codegen-facing half. One file, so the two halves cannot drift apart in separate
@@ -70,22 +69,6 @@ class SubjectPack:
             raise ValueError("The selected subtopic does not belong to this topic.")
         return topic, subtopic
 
-    def is_hero(self, request: LessonRequest) -> bool:
-        _, subtopic = self.resolve(request)
-        return bool(subtopic.get("hero"))
-
-    def hero_storyboard(self, request: LessonRequest) -> GeneratedStoryboard:
-        """The pack's prepared storyboard, with the teacher's objective honoured.
-
-        Stored as JSON and validated through the same models as a live draft, so a
-        pack cannot ship a storyboard shape the rest of the pipeline would choke on.
-        """
-        data = json.loads((self.root / "hero_storyboard.json").read_text(encoding="utf-8"))
-        generated = GeneratedStoryboard.model_validate(data)
-        if request.objective:
-            generated.learning_objective = request.objective
-        return generated
-
 
 class SubjectRegistry:
     def __init__(self, content_root: Path) -> None:
@@ -111,9 +94,6 @@ class SubjectRegistry:
         pack = self.pack(request.subject_id)
         topic, subtopic = pack.resolve(request)
         return pack, topic, subtopic
-
-    def is_hero(self, request: LessonRequest) -> bool:
-        return self.pack(request.subject_id).is_hero(request)
 
     def as_list(self) -> list[dict[str, Any]]:
         return [

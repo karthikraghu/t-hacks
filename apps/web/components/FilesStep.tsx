@@ -59,15 +59,6 @@ export function FilesStep({ headingRef, job, onStartOver, storyboard }: Props) {
         </div>
       </div>
 
-      {job.provenance === "cached" && (
-        <div className="alert alert-info" role="status">
-          <p>
-            <strong>This is the prepared example, not a live render.</strong> Live generation was unavailable, so
-            the stored version of this lesson is shown instead.
-          </p>
-        </div>
-      )}
-
       {video && (
         <div className="video-frame">
           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}

@@ -35,7 +35,7 @@ def main() -> None:
     print("1/5 Creating the live storyboard ...", flush=True)
     storyboard = require_ok(client.post("/api/storyboards", json=payload), "Storyboard")
     original_ids = [section["id"] for section in storyboard["sections"]]
-    print(f"    {len(storyboard['sections'])} sections, live={storyboard['generated_live']}", flush=True)
+    print(f"    {len(storyboard['sections'])} sections", flush=True)
 
     target = storyboard["sections"][1]
     print("2/5 Revising exactly one section ...", flush=True)
@@ -57,7 +57,7 @@ def main() -> None:
     approval = require_ok(client.post(f"/api/storyboards/{storyboard['id']}/approve"), "Freigabe")
     job_id = approval["id"]
 
-    terminal = {"ready", "failed", "cached_fallback"}
+    terminal = {"ready", "failed"}
     while True:
         job = require_ok(client.get(f"/api/jobs/{job_id}"), "Jobstatus")
         if job["status"] in terminal:
