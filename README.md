@@ -19,19 +19,16 @@ Two local processes, no database — job state is JSON files under `jobs/`:
 | Web UI (Next.js) | `apps/web` | 3000 |
 | API (FastAPI) | `services/api` | 8000 |
 
-The generation pipeline (`services/api/app/pipeline.py`) runs in the background after approval:
+High-level flow — the render pipeline (`services/api/app/pipeline.py`) runs in the background
+after the teacher approves:
 
-```
-POST /api/storyboards            model plans the storyboard + assignment, a second call reviews it
-POST .../sections/{id}/revise    regenerate exactly one section from a teacher comment
-POST .../approve                 start the render job, then:
-  1. narrate   ElevenLabs with timestamps -> narration.mp3, captions.srt, section durations
-  2. code      model writes one Manim scene file -> lesson.py
-  3. check     AST validation, fast preview, sync gate, frame-bounds gate, visual review
-               (deterministic failures get one repair attempt)
-  4. final     720p Manim render, three recap cards, FFmpeg mux with burned captions
-GET  /api/jobs/{id}              job status, artifacts, timings
-GET  /api/learning-packages/{id} the student package: video, cards, assignment, marking rules
+```mermaid
+flowchart LR
+    A["Teacher<br/>configures a lesson"] --> B["AI storyboard<br/>+ assignment"]
+    B -- "review / revise" --> B
+    B -- "approve" --> C["Render pipeline<br/>narrate · codegen · checks · final render"]
+    C --> D["Video + recap cards<br/>+ assignment"]
+    D -- "share link" --> E["Student<br/>watch · work · spoken questions · mark"]
 ```
 
 Manim runs as a local subprocess after AST validation, with a sanitized environment that carries no
